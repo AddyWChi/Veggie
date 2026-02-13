@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>訂單計算機</title>
+  <style>
+    #app {
+		display: inline-block;
+		padding: 10px;
+		font-size: x-large;
+		background-color: lightgreen;
+    }
+    #btnFunction { 
+		padding: 10px 20px; 
+		font-size: 16px; 
+		margin: 5px; 
+		background-color: green;
+	}
+    body { 
+		font-family: Arial; 
+		text-align: center; 
+		margin-top: 50px; 
+	}
+    input[type="text"] { 
+		width: 150px; 
+		padding: 10px; 
+		font-size: 16px; 
+	}
+    button { 
+		padding: 5px 10px;     <!--top 5px and buttom 10px-->
+		font-size: 16px; 
+		margin: 5px; 
+	}
+  </style>
+</head>
+<body>
+  <div id="error"></div>
+  <div id="menuList">
+  </div>
+  <div id="orderList"> 
+  </div>
+  <div>
+    <br>
+    <label>訂單： </label> <input type="text" id="totalAmt" disabled>
+    <br>
+    <button id="btnFunction" onclick="clearOrder()">開始新單</button>  
+  </div>
+  <script>
+  let _orderList = document.getElementById("orderList");
+  let _menuList = document.getElementById("menuList");
+  let _order = {};	
+  let _menu = {
+    "脆薯條 小": 35, "脆薯條 大": 55,
+    "微笑薯餅 5個": 35,
+    "三角薯餅 4個": 35,
+    "帶皮薯條": 50,
+    "杏鮑菇 小": 35, "杏鮑菇 大": 55,
+    "秀珍菇 小": 35, "秀珍菇 大": 55,
+    "香菇 小": 35, "香菇 大": 55,
+    "珊瑚菇 小": 35, "珊瑚菇 大": 55,
+    "金針菇 小": 35, "金針菇 大": 55,
+    "雪白菇": 55, 
+    "鹽酥G 小": 35, "鹽酥G 大": 55,
+    "地瓜條 小": 35, "地瓜條 大": 55,
+  };
+  
+  document.addEventListener("DOMContentLoaded", () => {   
+    console.log("Document loaded!");
+    document.getElementById('totalAmt').value = 0;
+
+    // Add menu item button by looping through the menu list
+    for (const item in _menu) {
+      console.log("item: " + item + " " + _menu[item]);
+      const btnMenuItem = document.createElement("button");
+      btnMenuItem.textContent = item + "(" + _menu[item] + ")";
+      btnMenuItem.onclick = () => addOrder(item);
+      _menuList.appendChild(btnMenuItem);
+    }    
+  });
+
+  function removeOrderTable() {
+    while (_orderList.firstChild) {
+      _orderList.removeChild(_orderList.firstChild);
+    }  
+  }
+  
+  function clearOrder() {
+    _order = {};
+    document.getElementById('totalAmt').value = 0;
+    document.getElementById('error').value = '';
+    removeOrderTable();
+  }
+
+  function showOrders() {
+    try {
+      for (const key in _order) {
+        const orderItem = document.createElement("div");
+        orderItem.innerHTML = key + "  (x" + _order[key] + ") : $ " + _order[key]*_menu[key]
+                              + "<button onclick=\"addOrder('" + key + "')\" > + 1 </button>" 
+                              + "<button onclick=\"removeOrder('" + key + "')\" > - 1 </button>";
+        _orderList.appendChild(orderItem);
+      }
+    } catch {
+      document.getElementById('error').value = 'Error';
+    }
+  }
+  
+  function sumOrders() {
+    let total = 0;
+    for (const key in _order) {
+      // console.log('order: ' + _order[key] + ' menu: ' + _menu[key]);
+      total += _menu[key] * _order[key];
+    }
+    document.getElementById('totalAmt').value = total;  
+  }
+
+  function addOrder(key) {
+    console.log(Date.now() + ' function: addOrder - ' + key);
+    try {
+        if (_order.hasOwnProperty(key)) {
+          // console.log(Date.now() + ' function: addOrder - already has key: ' + key);
+          _order[key] = _order[key] + 1;
+        } else {
+          // console.log(Date.now() + ' function: addOrder - does not have key: ' + key);
+          _order[key] = 1;
+        }
+        // console.log(Date.now() + ' function: addOrder - key has value: ' + _order[key]);        
+        // console.log(Date.now() + ' Current keys in the order: ' + Object.keys(_order));
+        sumOrders();
+    } catch {
+        document.getElementById('error').value = '有錯誤';
+    }
+    
+    removeOrderTable();
+    showOrders();
+  }
+  
+  function removeOrder(key) {
+    console.log(Date.now() + ' function: removeOrder - ' + key);
+    try {
+        if (_order.hasOwnProperty(key)) {
+          if (_order[key] > 1) {
+            _order[key] = _order[key] - 1;
+          } else {
+            delete _order[key]; 
+          }
+        }     
+        sumOrders();
+    } catch {
+        document.getElementById('error').value = '有錯誤';
+    }
+    
+    removeOrderTable();
+    showOrders();
+  }
+  </script>
+</body>
+</html>
