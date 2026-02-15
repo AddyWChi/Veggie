@@ -25,25 +25,56 @@
     let _menuList = document.getElementById("menuList");
     let _order = {};
     let _menu = {
-      "脆薯條 小": 35, "脆薯條 大": 55,
-      "微笑薯餅 5個": 35,
-      "三角薯餅 4個": 35,
-      "帶皮薯條": 50,
-      "杏鮑菇 小": 35, "杏鮑菇 大": 55,
-      "秀珍菇 小": 35, "秀珍菇 大": 55,
-      "香菇 小": 35, "香菇 大": 55,
-      "珊瑚菇 小": 35, "珊瑚菇 大": 55,
-      "金針菇 小": 35, "金針菇 大": 55,
-      "雪白菇": 55,
-      "鹽酥G 小": 35, "鹽酥G 大": 55,
-      "地瓜條 小": 35, "地瓜條 大": 55,
+      // 無蛋奶素
+      "無蛋": [
+        { name: "脆薯條 小", price: 35 }, { name: "脆薯條 大", price: 55 },
+        { name: "微笑薯餅 5個", price: 35 },
+        { name: "三角薯餅 4個", price: 35 },
+        { name: "帶皮薯條", price: 50 },
+        { name: "杏鮑菇 小", price: 35 }, { name: "杏鮑菇 大", price: 55 },
+        { name: "秀珍菇 小", price: 35 }, { name: "秀珍菇 大", price: 55 },
+        { name: "香菇 小", price: 35 }, { name: "香菇 大", price: 55 },
+        { name: "珊瑚菇 小", price: 35 }, { name: "珊瑚菇 大", price: 55 },
+        { name: "金針菇 小", price: 35 }, { name: "金針菇 大", price: 55 },
+        { name: "雪白菇", price: 55 },
+        { name: "鹽酥G 小", price: 35 }, { name: "鹽酥G 大", price: 55 },
+        { name: "地瓜條 小", price: 35 }, { name: "地瓜條 大", price: 55 },
+      ],
+      // 蔬菜類
+      "蔬菜": [
+        { name: "青椒", price: 30 },
+        { name: "小黃瓜", price: 30 },
+        { name: "玉米", price: 35 },
+        { name: "四季豆", price: 35 },
+        { name: "玉米筍", price: 40 },
+      ],
+      // 熟食區
+      "熟食": [
+        { name: "脆皮素肉圓", price: 40 },
+        { name: "粉絲煲", price: 45 },
+        { name: "YES素原味水餃", price: 45 },
+      ],
+      // 蛋奶素
+      "蛋奶": [
+        { name: "甜不辣 小", price: 35 }, { name: "甜不辣 大", price: 55 },
+        { name: "素魷魚呼啦圈 5個", price: 40 }, { name: "素魷魚呼啦圈 9個", price: 60 },
+        { name: "鷄蛋豆腐 半盒", price: 35 }, { name: "鷄蛋豆腐 整盒", price: 60 },
+      ],
+      // 素漢堡
+      "素堡": [
+        { name: "素食大亨堡", price: 65 },
+        { name: "咔啦潛艇堡", price: 70 },
+        { name: "叉燒潛艇堡", price: 70 },
+      ]
     };
 
     document.addEventListener("DOMContentLoaded", () => {
       console.log("Document loaded!");
       document.getElementById('totalAmt').value = 0;
+      let keys = Object.keys(_menu).map(k => k.trim());
 
-      // Add menu item button by looping through the menu list
+      // Add menu item button.
+      // First get all the keys and then loop looping through the elements.
       // Each row has 3 cells
       let cellCount = 1;
       let rowDiv = document.createElement("div");
