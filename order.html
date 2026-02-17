@@ -8,25 +8,45 @@
   <title>訂單計算機</title>
 </head>
 <body>
+  <div class="container-fluid">
+    <header class="d-flex flex-wrap align-items-center justify-content-center py-3 mb-2">
+      <ul class="nav">
+        <li>
+          <button class="nav-link active px-2 link-secondary" id="btnMenuAll" onclick="showMenu(-1)">- 全 -</button>
+        </li>
+        <li>
+          <button class="nav-link active px-2 link-secondary" id="btnMenu1" onclick="showMenu(1)">無蛋奶素</button>
+        </li>
+        <li>
+          <button class="nav-link active px-2 link-secondary" id="btnMenu2" onclick="showMenu(2)">蔬菜類</button>
+        </li>
+        <li>
+          <button class="nav-link active px-2 link-secondary" id="btnMenu3" onclick="showMenu(3)">熟食區</button>
+        </li>
+        <li>
+          <button class="nav-link active px-2 link-secondary" id="btnMenu4" onclick="showMenu(4)">蛋奶素</button>
+        </li>
+        <li>
+          <button class="nav-link active px-2 link-secondary" id="btnMenu5" onclick="showMenu(5)">素漢堡</button>
+        </li>
+        <li>
+          <input type="text" class="mx-2" id="totalAmt" placeholder=" $ 金額..." disabled>
+        </li>
+        <li>
+          <button type="button" class="btn btn-warning" onclick="clearOrder()">新單</button>
+        </li>
+      </ul>
+    </header>
+  </div>
+
   <div id="error"> </div>
   <div id="menuList" class="container-fluid my-3"> </div>
   <div id="orderList" class="container-fluid my-3"> </div>
 
-  <div class="container-fluid">
-    <div class="my-3 d-flex justify-content-center">
-      <label>訂單： </label> <input type="text" id="totalAmt" disabled>
-    </div>
-    <div class="my-3 d-flex justify-content-center">
-      <button class="btn btn-success rounded-pill px-3" id="btnFunction" onclick="clearOrder()">開始新單</button>
-    </div>
-  </div>
   <script>
-    let _orderList = document.getElementById("orderList");
-    let _menuList = document.getElementById("menuList");
-    let _order = {};
     let _menu = {
       // 無蛋奶素
-      "無蛋": [
+      "1": [
         { name: "脆薯條 小", price: 35 }, { name: "脆薯條 大", price: 55 },
         { name: "微笑薯餅 5個", price: 35 },
         { name: "三角薯餅 4個", price: 35 },
@@ -41,7 +61,7 @@
         { name: "地瓜條 小", price: 35 }, { name: "地瓜條 大", price: 55 },
       ],
       // 蔬菜類
-      "蔬菜": [
+      "2": [
         { name: "青椒", price: 30 },
         { name: "小黃瓜", price: 30 },
         { name: "玉米", price: 35 },
@@ -49,30 +69,36 @@
         { name: "玉米筍", price: 40 },
       ],
       // 熟食區
-      "熟食": [
+      "3": [
         { name: "脆皮素肉圓", price: 40 },
         { name: "粉絲煲", price: 45 },
         { name: "YES素原味水餃", price: 45 },
       ],
       // 蛋奶素
-      "蛋奶": [
+      "4": [
         { name: "甜不辣 小", price: 35 }, { name: "甜不辣 大", price: 55 },
         { name: "素魷魚呼啦圈 5個", price: 40 }, { name: "素魷魚呼啦圈 9個", price: 60 },
         { name: "鷄蛋豆腐 半盒", price: 35 }, { name: "鷄蛋豆腐 整盒", price: 60 },
       ],
       // 素漢堡
-      "素堡": [
+      "5": [
         { name: "素食大亨堡", price: 65 },
         { name: "咔啦潛艇堡", price: 70 },
         { name: "叉燒潛艇堡", price: 70 },
       ]
     };
 
+    let _order = {};
+    let _orderList = document.getElementById("orderList");
+    let _menuList = document.getElementById("menuList");
+    let _keys = Object.keys(_menu).map(k => k.trim());
     document.addEventListener("DOMContentLoaded", () => {
       console.log("Document loaded!");
-      document.getElementById('totalAmt').value = 0;
-      let keys = Object.keys(_menu).map(k => k.trim());
+      showMenu(-1);
+    });
 
+    function showMenu(showSection) {
+      removeChildren(_menuList);
       // Add menu item button.
       // First get all the keys and then loop looping through the elements.
       // Each row has 3 cells
@@ -80,48 +106,59 @@
       let rowDiv = document.createElement("div");
       rowDiv.classList.add("row");
       _menuList.appendChild(rowDiv);
-      for (const item in _menu) {
-        console.log("item: " + item + " " + _menu[item]);
-        if (cellCount >= 4) {
-          rowDiv = document.createElement("div");
-          rowDiv.classList.add("row");
-          _menuList.appendChild(rowDiv);
-          cellCount = 1;
+      // Loop through JSON object's keys
+      // and within each key, loop through elements.
+      for (let i = 0; i < _keys.length; i++) {
+        // console.log("_keys[i]: ..." + _keys[i]);
+        // console.log("_menu[_keys[i]].length: ..." + _menu[_keys[i]].length);
+        if (showSection == -1 || i == (showSection - 1)) {
+          for (let j = 0; j < _menu[_keys[i]].length; j++) {
+            // console.log("_menu[_keys[i]][j].name: ..." + _menu[_keys[i]][j].name);
+            if (cellCount >= 4) {
+              rowDiv = document.createElement("div");
+              rowDiv.classList.add("row");
+              _menuList.appendChild(rowDiv);
+              cellCount = 1;
+            }
+            const btnMenuItem = document.createElement("button");
+            btnMenuItem.type = "button";
+            btnMenuItem.textContent = _menu[_keys[i]][j].name + " (" + _menu[_keys[i]][j].price + ")";
+            btnMenuItem.classList.add("btn");
+            btnMenuItem.classList.add("btn-outline-secondary");
+            btnMenuItem.classList.add("col-md-4");
+            btnMenuItem.classList.add("col-sm-12");
+            // Set button click function
+            btnMenuItem.onclick = () => addOrder(_menu[_keys[i]][j].name, _menu[_keys[i]][j].price);
+            rowDiv.appendChild(btnMenuItem);
+            cellCount++;
+          }
         }
-
-        const btnMenuItem = document.createElement("button");
-        btnMenuItem.type = "button";
-        btnMenuItem.textContent = item + "(" + _menu[item] + ")";
-        // outline-secondary
-        btnMenuItem.classList.add("btn");
-        btnMenuItem.classList.add("btn-outline-secondary");
-        btnMenuItem.classList.add("col-md-4");
-        btnMenuItem.classList.add("col-sm-12");
-        btnMenuItem.onclick = () => addOrder(item);
-        rowDiv.appendChild(btnMenuItem);
-        cellCount++;
       }
-    });
+    }
 
-    function removeOrderTable() {
-      while (_orderList.firstChild) {
-        _orderList.removeChild(_orderList.firstChild);
+    function removeChildren(pNode) {
+      console.log(Date.now() + ' function: removeChildren');
+      while (pNode.firstChild) {
+        pNode.removeChild(pNode.firstChild);
       }
     }
 
     function clearOrder() {
       _order = {};
-      document.getElementById('totalAmt').value = 0;
+      document.getElementById('totalAmt').value = '';
       document.getElementById('error').value = '';
-      removeOrderTable();
+      removeChildren(_orderList);
     }
 
     function showOrders() {
+      console.log(Date.now() + ' function: showOrders - no parameter');
       try {
         for (const key in _order) {
+          console.log('showOrders - key:' + key);
           const orderItem = document.createElement("div");
           orderItem.classList.add("row");
-          orderItem.innerHTML = "<label class=\"col-4 d-flex justify-content-end\" >" + key + "  (x" + _order[key] + ") : $ " + _order[key] * _menu[key] + "</label>"
+          orderItem.innerHTML = "<label class=\"col-4 d-flex justify-content-end\" >"
+            + key + " (x" + _order[key].count + ") : $ " + (_order[key].count * _order[key].price) + "</label>"
             + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-primary\" onclick=\"addOrder('" + key + "')\" > + 1 </button>"
             + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-info\" onclick=\"removeOrder('" + key + "')\" > - 1 </button>";
           _orderList.appendChild(orderItem);
@@ -132,52 +169,52 @@
     }
 
     function sumOrders() {
+      // console.log(Date.now() + ' function: sumOrders - no parameter');
       let total = 0;
       for (const key in _order) {
-        // console.log('order: ' + _order[key] + ' menu: ' + _menu[key]);
-        total += _menu[key] * _order[key];
+        console.log(key + ': order count: ' + _order[key].count + ' price - ' + _order[key].price);
+        total += _order[key].count * _order[key].price;
       }
       document.getElementById('totalAmt').value = total;
     }
 
-    function addOrder(key) {
-      console.log(Date.now() + ' function: addOrder - ' + key);
+    function addOrder(key, price) {
+      console.log(Date.now() + ' function: addOrder - ' + key + ':$' + price);
       try {
         if (_order.hasOwnProperty(key)) {
-          // console.log(Date.now() + ' function: addOrder - already has key: ' + key);
-          _order[key] = _order[key] + 1;
+          console.log(Date.now() + ' function: addOrder - already has key: ' + key + '& count: ' + _order[key].count);
+          _order[key].count = _order[key].count + 1;
         } else {
-          // console.log(Date.now() + ' function: addOrder - does not have key: ' + key);
-          _order[key] = 1;
+          console.log(Date.now() + ' function: addOrder - new key: ' + key);
+          _order[key] = {};
+          _order[key].price = price;
+          _order[key].count = 1;
+          console.log(Date.now() + ' function: addOrder - new key: ' + key + ' & count: ' + _order[key].count);
         }
-        // console.log(Date.now() + ' function: addOrder - key has value: ' + _order[key]);
-        // console.log(Date.now() + ' Current keys in the order: ' + Object.keys(_order));
+        removeChildren(_orderList);
+        showOrders();
         sumOrders();
       } catch {
         document.getElementById('error').value = '有錯誤';
       }
-
-      removeOrderTable();
-      showOrders();
     }
 
     function removeOrder(key) {
       console.log(Date.now() + ' function: removeOrder - ' + key);
       try {
         if (_order.hasOwnProperty(key)) {
-          if (_order[key] > 1) {
-            _order[key] = _order[key] - 1;
+          if (_order[key].count > 1) {
+            _order[key].count = _order[key].count - 1;
           } else {
             delete _order[key];
           }
         }
+        removeChildren(_orderList);
+        showOrders();
         sumOrders();
       } catch {
         document.getElementById('error').value = '有錯誤';
       }
-
-      removeOrderTable();
-      showOrders();
     }
   </script>
 </body>
