@@ -12,22 +12,22 @@
     <header class="d-flex flex-wrap align-items-center justify-content-center py-3 mb-2">
       <ul class="nav">
         <li>
-          <button class="nav-link active px-2 link-secondary" id="btnMenuAll" onclick="showMenu(-1)">- 全 -</button>
+          <button class="nav-link active px-2 link-secondary" id="btnMenuAll" onclick="showMenu(-1, 1)">- 全 -</button>
         </li>
         <li>
-          <button class="nav-link active px-2 link-secondary" id="btnMenu1" onclick="showMenu(1)">無蛋奶素</button>
+          <button class="nav-link active px-2 link-secondary" id="btnMenu1" onclick="showMenu(1, 1)">無蛋奶素</button>
         </li>
         <li>
-          <button class="nav-link active px-2 link-secondary" id="btnMenu2" onclick="showMenu(2)">蔬菜類</button>
+          <button class="nav-link active px-2 link-secondary" id="btnMenu2" onclick="showMenu(2, 1)">蔬菜類</button>
         </li>
         <li>
-          <button class="nav-link active px-2 link-secondary" id="btnMenu3" onclick="showMenu(3)">熟食區</button>
+          <button class="nav-link active px-2 link-secondary" id="btnMenu3" onclick="showMenu(3, 1)">熟食區</button>
         </li>
         <li>
-          <button class="nav-link active px-2 link-secondary" id="btnMenu4" onclick="showMenu(4)">蛋奶素</button>
+          <button class="nav-link active px-2 link-secondary" id="btnMenu4" onclick="showMenu(4, 1)">蛋奶素</button>
         </li>
         <li>
-          <button class="nav-link active px-2 link-secondary" id="btnMenu5" onclick="showMenu(5)">素漢堡</button>
+          <button class="nav-link active px-2 link-secondary" id="btnMenu5" onclick="showMenu(5, 1)">素漢堡</button>
         </li>
         <li>
           <input type="text" class="mx-2" id="totalAmt" placeholder=" $ 金額..." disabled>
@@ -37,6 +37,25 @@
         </li>
       </ul>
     </header>
+    <div>
+      <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+          <li class="page-item">
+            <button class="btn btn-success" id="pagePre" aria-label="Previous" onclick="showMenu(_currentFilter, _currentPage-1)">
+              <span aria-hidden="true"> &laquo; 上頁 </span>
+            </button>
+          </li>
+          <li class="page-item">
+            <span class="mx-3 fs-4" id="pageNum"> 1 </span>
+          </li>
+          <li class="page-item">
+            <button class="btn btn-success" id="pageNext" aria-label="Next" onclick="showMenu(_currentFilter, _currentPage+1)">
+              <span aria-hidden="true"> 下頁 &raquo; </span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
   </div>
 
   <div id="error"> </div>
@@ -45,94 +64,136 @@
 
   <script>
     let _menu = {
-      // 無蛋奶素
+      // 無蛋奶素, key == 1
       "1": [
         { name: "脆薯條 小", price: 35 }, { name: "脆薯條 大", price: 55 },
-        { name: "微笑薯餅 5個", price: 35 },
-        { name: "三角薯餅 4個", price: 35 },
-        { name: "帶皮薯條", price: 50 },
-        { name: "杏鮑菇 小", price: 35 }, { name: "杏鮑菇 大", price: 55 },
-        { name: "秀珍菇 小", price: 35 }, { name: "秀珍菇 大", price: 55 },
-        { name: "香菇 小", price: 35 }, { name: "香菇 大", price: 55 },
-        { name: "珊瑚菇 小", price: 35 }, { name: "珊瑚菇 大", price: 55 },
-        { name: "金針菇 小", price: 35 }, { name: "金針菇 大", price: 55 },
-        { name: "雪白菇", price: 55 },
+        { name: "微笑薯餅 5個", price: 35 }, { name: "三角薯餅 4個", price: 35 },
+        { name: "帶皮薯條", price: 50 }, { name: "杏鮑菇 小", price: 35 },
+        { name: "杏鮑菇 大", price: 55 }, { name: "秀珍菇 小", price: 35 },
+        { name: "秀珍菇 大", price: 55 }, { name: "香菇 小", price: 35 },
+        { name: "香菇 大", price: 55 }, { name: "珊瑚菇 小", price: 35 },
+        { name: "珊瑚菇 大", price: 55 }, { name: "金針菇 小", price: 35 },
+        { name: "金針菇 大", price: 55 }, { name: "雪白菇", price: 55 },
         { name: "鹽酥G 小", price: 35 }, { name: "鹽酥G 大", price: 55 },
         { name: "地瓜條 小", price: 35 }, { name: "地瓜條 大", price: 55 },
       ],
-      // 蔬菜類
+      // 蔬菜類, key == 2
       "2": [
-        { name: "青椒", price: 30 },
-        { name: "小黃瓜", price: 30 },
-        { name: "玉米", price: 35 },
-        { name: "四季豆", price: 35 },
+        { name: "青椒", price: 30 }, { name: "小黃瓜", price: 30 },
+        { name: "玉米", price: 35 }, { name: "四季豆", price: 35 },
         { name: "玉米筍", price: 40 },
       ],
-      // 熟食區
+      // 熟食區, key == 3
       "3": [
-        { name: "脆皮素肉圓", price: 40 },
-        { name: "粉絲煲", price: 45 },
+        { name: "脆皮素肉圓", price: 40 }, { name: "粉絲煲", price: 45 },
         { name: "YES素原味水餃", price: 45 },
       ],
-      // 蛋奶素
+      // 蛋奶素, key == 4
       "4": [
         { name: "甜不辣 小", price: 35 }, { name: "甜不辣 大", price: 55 },
         { name: "素魷魚呼啦圈 5個", price: 40 }, { name: "素魷魚呼啦圈 9個", price: 60 },
         { name: "鷄蛋豆腐 半盒", price: 35 }, { name: "鷄蛋豆腐 整盒", price: 60 },
       ],
-      // 素漢堡
+      // 素漢堡, key == 5
       "5": [
-        { name: "素食大亨堡", price: 65 },
-        { name: "咔啦潛艇堡", price: 70 },
+        { name: "素食大亨堡", price: 65 }, { name: "咔啦潛艇堡", price: 70 },
         { name: "叉燒潛艇堡", price: 70 },
       ]
     };
 
+    let _columnCount = 4;     // Number of columns. Ex: 1,2,3,4,6,12
+    let _cellsPerPage = 10;    // Number of menu item per page
+    let _currentPage = 1;     // Current page number
+    let _currentFilter = -1;  // Initial value is -1.
     let _order = {};
     let _orderList = document.getElementById("orderList");
     let _menuList = document.getElementById("menuList");
+    let _pageNum = document.getElementById("pageNum");
+    let _pagePre = document.getElementById("pagePre");
+    let _pageNext = document.getElementById("pageNext");
+
+
     let _keys = Object.keys(_menu).map(k => k.trim());
     document.addEventListener("DOMContentLoaded", () => {
       console.log("Document loaded!");
-      showMenu(-1);
+      showMenu(-1, 1);
     });
 
-    function showMenu(showSection) {
-      removeChildren(_menuList);
-      // Add menu item button.
-      // First get all the keys and then loop looping through the elements.
-      // Each row has 3 cells
+    function showMenu(filter, selectPage) {
+      _currentFilter = filter;
+      _currentPage = selectPage;
+      _pageNum.textContent = selectPage;
+      let itemCount = 0;    // Keep track of currently showing item
       let cellCount = 1;
       let rowDiv = document.createElement("div");
+
+      removeChildren(_menuList);
+      setPrePageState(selectPage);
+
       rowDiv.classList.add("row");
       _menuList.appendChild(rowDiv);
-      // Loop through JSON object's keys
-      // and within each key, loop through elements.
+      // Add menu items as buttons.
       for (let i = 0; i < _keys.length; i++) {
-        // console.log("_keys[i]: ..." + _keys[i]);
-        // console.log("_menu[_keys[i]].length: ..." + _menu[_keys[i]].length);
-        if (showSection == -1 || i == (showSection - 1)) {
-          for (let j = 0; j < _menu[_keys[i]].length; j++) {
-            // console.log("_menu[_keys[i]][j].name: ..." + _menu[_keys[i]][j].name);
-            if (cellCount >= 4) {
+        // Show only selected section, the key in JSON object
+        if (filter == -1 || i == (filter - 1)) {
+          for (let menuItem = 0; menuItem < _menu[_keys[i]].length; menuItem++) {
+            console.log("_currentPage: " + _currentPage + " itemCount: " + itemCount);
+            itemCount++;
+            // Only show items on the current page
+            if ((itemCount <= ((selectPage - 1) * _cellsPerPage))
+              || ((itemCount + 1) > (selectPage * _cellsPerPage + 1))) {
+              console.log("skip: " + _menu[_keys[i]][menuItem].name + " (" + _menu[_keys[i]][menuItem].price + ")");
+              continue;
+            }
+            console.log("show: " + _menu[_keys[i]][menuItem].name + " (" + _menu[_keys[i]][menuItem].price + ")");
+            if (cellCount > _columnCount) {
               rowDiv = document.createElement("div");
               rowDiv.classList.add("row");
               _menuList.appendChild(rowDiv);
               cellCount = 1;
             }
+            cellCount++;
             const btnMenuItem = document.createElement("button");
             btnMenuItem.type = "button";
-            btnMenuItem.textContent = _menu[_keys[i]][j].name + " (" + _menu[_keys[i]][j].price + ")";
+            btnMenuItem.textContent = _menu[_keys[i]][menuItem].name + " (" + _menu[_keys[i]][menuItem].price + ")";
             btnMenuItem.classList.add("btn");
             btnMenuItem.classList.add("btn-outline-secondary");
-            btnMenuItem.classList.add("col-md-4");
-            btnMenuItem.classList.add("col-sm-12");
+            btnMenuItem.classList.add("col-md");
+            btnMenuItem.classList.add("col-sm");
             // Set button click function
-            btnMenuItem.onclick = () => addOrder(_menu[_keys[i]][j].name, _menu[_keys[i]][j].price);
+            btnMenuItem.onclick = () => addOrder(_menu[_keys[i]][menuItem].name, _menu[_keys[i]][menuItem].price);
             rowDiv.appendChild(btnMenuItem);
-            cellCount++;
           }
         }
+      }
+      setNextPageState(itemCount);
+    }
+
+    function setPrePageState(selectPage) {
+      console.log(Date.now() + ' function: setPrePageState - selectPage:' + selectPage);
+      if (selectPage == 1) {
+        _pagePre.disabled = true;
+      } else {
+        _pagePre.disabled = false;
+      }
+    }
+
+    function setNextPageState(itemCount) {
+      console.log(Date.now() + ' function: setNextPageState - itemCount:' + itemCount + ' _cellsPerPage:' + _cellsPerPage);
+      let isShowingLastPage = false;
+      let quotient = Math.floor(itemCount / _cellsPerPage);
+      let remainder = itemCount % _cellsPerPage;
+      console.log('function: setNextPageState - quotient:' + quotient + ' remainder:' + remainder + ' _currentPage:' + _currentPage);
+      if (remainder != 0) {
+        isShowingLastPage = ((quotient + 1) == _currentPage);
+      } else {
+        isShowingLastPage = (quotient == _currentPage);
+      }
+      console.log(Date.now() + ' function: setNextPageState - isShowingLastPage:' + isShowingLastPage);
+      if (isShowingLastPage) {
+        _pageNext.disabled = true;
+      } else {
+        _pageNext.disabled = false;
       }
     }
 
@@ -144,6 +205,7 @@
     }
 
     function clearOrder() {
+      console.log(Date.now() + ' function: clearOrder - no parameter');
       _order = {};
       document.getElementById('totalAmt').value = '';
       document.getElementById('error').value = '';
@@ -169,7 +231,7 @@
     }
 
     function sumOrders() {
-      // console.log(Date.now() + ' function: sumOrders - no parameter');
+      console.log(Date.now() + ' function: sumOrders - no parameter');
       let total = 0;
       for (const key in _order) {
         console.log(key + ': order count: ' + _order[key].count + ' price - ' + _order[key].price);
