@@ -30,10 +30,13 @@
           <button class="nav-link active px-2 link-secondary" id="btnMenu5" onclick="showMenu(5, 1)">素漢堡</button>
         </li>
         <li>
-          <input type="text" class="mx-2" id="totalAmt" placeholder=" $ 金額..." disabled>
+          <input type="text" class="mx-2" id="totalAmt" placeholder=" $ 訂單..." disabled>
         </li>
         <li>
-          <button type="button" class="btn btn-warning" onclick="clearOrder()">新單</button>
+          <button type="button" class="btn btn-warning mx-2" onclick="clearOrder()">新單</button>
+        </li>
+        <li>
+          <button type="button" class="btn btn-warning mx-2" onclick="calcChange()">結 賬</button>
         </li>
       </ul>
     </header>
@@ -102,18 +105,20 @@
     };
 
     let _columnCount = 4;     // Number of columns. Ex: 1,2,3,4,6,12
-    let _cellsPerPage = 10;    // Number of menu item per page
+    let _cellsPerPage = 10;   // Number of menu item per page
     let _currentPage = 1;     // Current page number
     let _currentFilter = -1;  // Initial value is -1.
+    let _calcChangeFileName = "calcChange.html";
+    let _sessionKey = "veggiBill";
     let _order = {};
-    let _orderList = document.getElementById("orderList");
-    let _menuList = document.getElementById("menuList");
-    let _pageNum = document.getElementById("pageNum");
-    let _pagePre = document.getElementById("pagePre");
-    let _pageNext = document.getElementById("pageNext");
-
-
+    let _totalOrderAmt = 0;
     let _keys = Object.keys(_menu).map(k => k.trim());
+    let _orderListNode = document.getElementById("orderList");
+    let _menuListNode = document.getElementById("menuList");
+    let _pageNumNode = document.getElementById("pageNum");
+    let _pagePreNode = document.getElementById("pagePre");
+    let _pageNextNode = document.getElementById("pageNext");
+
     document.addEventListener("DOMContentLoaded", () => {
       console.log("Document loaded!");
       showMenu(-1, 1);
@@ -122,16 +127,14 @@
     function showMenu(filter, selectPage) {
       _currentFilter = filter;
       _currentPage = selectPage;
-      _pageNum.textContent = selectPage;
+      _pageNumNode.textContent = selectPage;
       let itemCount = 0;    // Keep track of currently showing item
       let cellCount = 1;
       let rowDiv = document.createElement("div");
-
-      removeChildren(_menuList);
+      removeChildren(_menuListNode);
       setPrePageState(selectPage);
-
       rowDiv.classList.add("row");
-      _menuList.appendChild(rowDiv);
+      _menuListNode.appendChild(rowDiv);
       // Add menu items as buttons.
       for (let i = 0; i < _keys.length; i++) {
         // Show only selected section, the key in JSON object
@@ -149,7 +152,7 @@
             if (cellCount > _columnCount) {
               rowDiv = document.createElement("div");
               rowDiv.classList.add("row");
-              _menuList.appendChild(rowDiv);
+              _menuListNode.appendChild(rowDiv);
               cellCount = 1;
             }
             cellCount++;
@@ -172,9 +175,9 @@
     function setPrePageState(selectPage) {
       console.log(Date.now() + ' function: setPrePageState - selectPage:' + selectPage);
       if (selectPage == 1) {
-        _pagePre.disabled = true;
+        _pagePreNode.disabled = true;
       } else {
-        _pagePre.disabled = false;
+        _pagePreNode.disabled = false;
       }
     }
 
@@ -191,9 +194,9 @@
       }
       console.log(Date.now() + ' function: setNextPageState - isShowingLastPage:' + isShowingLastPage);
       if (isShowingLastPage) {
-        _pageNext.disabled = true;
+        _pageNextNode.disabled = true;
       } else {
-        _pageNext.disabled = false;
+        _pageNextNode.disabled = false;
       }
     }
 
@@ -209,7 +212,14 @@
       _order = {};
       document.getElementById('totalAmt').value = '';
       document.getElementById('error').value = '';
-      removeChildren(_orderList);
+      removeChildren(_orderListNode);
+    }
+
+    function calcChange() {
+      console.log(Date.now() + ' function: calcChange - no parameter');
+      sessionStorage.removeItem(_sessionKey);
+      sessionStorage.setItem(_sessionKey, JSON.stringify(_order));
+      window.open(_calcChangeFileName, '_blank');
     }
 
     function showOrders() {
@@ -223,7 +233,7 @@
             + key + " (x" + _order[key].count + ") : $ " + (_order[key].count * _order[key].price) + "</label>"
             + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-primary\" onclick=\"addOrder('" + key + "')\" > + 1 </button>"
             + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-info\" onclick=\"removeOrder('" + key + "')\" > - 1 </button>";
-          _orderList.appendChild(orderItem);
+          _orderListNode.appendChild(orderItem);
         }
       } catch {
         document.getElementById('error').value = 'Error';
@@ -237,7 +247,11 @@
         console.log(key + ': order count: ' + _order[key].count + ' price - ' + _order[key].price);
         total += _order[key].count * _order[key].price;
       }
-      document.getElementById('totalAmt').value = total;
+      if (total == 0) {
+        document.getElementById('totalAmt').value = "$ 訂單...";
+      } else {
+        document.getElementById('totalAmt').value = total;
+      }
     }
 
     function addOrder(key, price) {
@@ -253,7 +267,7 @@
           _order[key].count = 1;
           console.log(Date.now() + ' function: addOrder - new key: ' + key + ' & count: ' + _order[key].count);
         }
-        removeChildren(_orderList);
+        removeChildren(_orderListNode);
         showOrders();
         sumOrders();
       } catch {
@@ -271,7 +285,7 @@
             delete _order[key];
           }
         }
-        removeChildren(_orderList);
+        removeChildren(_orderListNode);
         showOrders();
         sumOrders();
       } catch {

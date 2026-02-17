@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <title>找零-訂單計算機</title>
+</head>
+<body>
+  <div class="col-6 mx-auto text-center py-3 mb-2">
+    客人 <input type="text" class="mx-2" id="customerId" placeholder=" 名...">   
+  </div>
+  <div class="container-fluid"> 
+    <div class="row my-2">
+      <button type="button" class="btn btn-info" onclick="clearAmount()">再算一次</button> 
+    </div>
+    <div class="row my-2">
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(300)"> 300 </button>    
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(100)"> 100 </button>    
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(90)"> 90 </button>
+    </div>
+    <div class="row my-2">
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(80)"> 80 </button>
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(70)"> 70 </button>
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(60)"> 60 </button>
+    </div>
+    <div class="row my-2">
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(50)"> 50 </button>
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(40)"> 40 </button>
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(30)"> 30 </button>
+    </div>
+    <div class="row my-2">
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(20)"> 20 </button>
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(10)"> 10 </button>
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(5)"> 5 </button>
+    </div>
+    <div class="row mt-4">
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(500)"> 500 </button>
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(1000)"> 1000 </button>
+    </div>
+    <div class="row my-2">
+      <button type="button" class="btn btn-info" onclick="clearAmount()">再算一次</button> 
+    </div>
+
+    <div class="col-6 mx-auto text-center">
+      $ <input type="text" class="mx-2" id="customerPaid" placeholder=" $ 收到金額..." disabled> 
+      <span class = "fs-4"> - </span> $ <input type="text" class="mx-2" id="totalAmt" placeholder=" $ 訂單..." disabled> 
+      <span class = "fs-4"> = </span> $ <input type="text" class="mx-2" id="totalChg" placeholder=" $ 找零..." disabled> 
+    </div>
+  </div>
+  <div id="error"> </div>
+  <div id="orderList" class="container-fluid my-3"> </div>
+ 
+  <script>
+  let _sessionKey = "veggiBill";
+  let _orderStr = sessionStorage.getItem(_sessionKey);
+  let _order = JSON.parse(_orderStr);
+  let _customerPaid = 0;
+  let _totalOrderAmt = 0;
+  let _totalChgColor;
+  let _orderListNode = document.getElementById("orderList");
+  let _customerIdboxNode = document.getElementById("customerId");
+  let _customerPaidNode = document.getElementById("customerPaid");
+  let _totalChgNode = document.getElementById("totalChg");
+
+  document.addEventListener("DOMContentLoaded", () => {   
+    console.log("Document loaded!");
+    showOrders();
+    sumOrders();
+    // RGB format
+    _totalChgColor = window.getComputedStyle(_customerPaidNode).color;
+  });
+  _customerIdboxNode.addEventListener("input", function() {
+      document.title = _customerIdboxNode.value || "-找零";
+  });
+
+
+  function removeChildren(pNode) {
+    console.log(Date.now() + ' function: removeChildren');
+    while (pNode.firstChild) {
+      pNode.removeChild(pNode.firstChild);
+    }  
+  }
+  
+  function paidAmount(addAmt) {
+    console.log(Date.now() + ' function: paidAmount - addAmt: ' + addAmt);
+    //_customerPaid = _customerPaid + addAmt;  
+    _customerPaid += addAmt;  
+    document.getElementById('customerPaid').value = _customerPaid;
+    document.getElementById('totalChg').value = _customerPaid - _totalOrderAmt;
+    if (_customerPaid - _totalOrderAmt < 0) {
+      _totalChgNode.style.color = "red";
+    } else {
+      _totalChgNode.style.color = _totalChgColor;
+    }    
+  }  
+  
+  function clearAmount() {
+    console.log(Date.now() + ' function: clearAmount - no parameter');
+    _customerPaid = 0;
+    // Update formula view 
+    paidAmount(0);
+  }
+
+  function showOrders() {
+    console.log(Date.now() + ' function: showOrders - no parameter');
+    console.log(' function: showOrders - ' + _orderStr);
+    try {
+      for (const key in _order) {
+        console.log('showOrders - key:' + key);
+        const orderItem = document.createElement("div");
+        orderItem.classList.add("row");
+        orderItem.innerHTML = "<label class=\"col-4 d-flex justify-content-end\" >" 
+                                 + key + " (x" + _order[key].count + ") : $ " + (_order[key].count*_order[key].price) + "</label>"
+                              + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-primary\" onclick=\"addOrder('" + key + "')\" > + 1 </button>" 
+                              + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-info\" onclick=\"removeOrder('" + key + "')\" > - 1 </button>";
+        _orderListNode.appendChild(orderItem);
+      }
+    } catch {
+      document.getElementById('error').value = 'Error';
+    }
+  }
+  
+  function sumOrders() {
+    console.log(Date.now() + ' function: sumOrders - no parameter');
+    let total = 0;    
+    for (const key in _order) {
+      console.log(key + ': order count: ' + _order[key].count + ' price - ' + _order[key].price);
+      total += _order[key].count * _order[key].price ;
+    }
+    if (total == 0) {
+      document.getElementById('totalAmt').value = "$ 訂單...";
+      _totalOrderAmt = 0;
+    } else {
+      document.getElementById('totalAmt').value = total;  
+      _totalOrderAmt = total;
+    }
+    // Update formula view 
+    paidAmount(0);
+  }
+
+  function addOrder(key, price) {
+    console.log(Date.now() + ' function: addOrder - ' + key + ':$' + price);
+    try {
+        if (_order.hasOwnProperty(key)) {
+          console.log(Date.now() + ' function: addOrder - already has key: ' + key + '& count: ' + _order[key].count);
+          _order[key].count = _order[key].count + 1;
+        } else {
+          console.log(Date.now() + ' function: addOrder - new key: ' + key);
+          _order[key] = {};
+          _order[key].price = price;
+          _order[key].count = 1;
+          console.log(Date.now() + ' function: addOrder - new key: ' + key + ' & count: ' + _order[key].count);
+        }
+        removeChildren(_orderListNode);
+        showOrders();
+        sumOrders();
+    } catch {
+        document.getElementById('error').value = '有錯誤';
+    }   
+  }
+  
+  function removeOrder(key) {
+    console.log(Date.now() + ' function: removeOrder - ' + key);
+    try {
+        if (_order.hasOwnProperty(key)) {
+          if (_order[key].count > 1) {
+            _order[key].count = _order[key].count - 1;
+          } else {
+            delete _order[key]; 
+          }
+        }
+        removeChildren(_orderListNode);
+        showOrders();
+        sumOrders();
+    } catch {
+        document.getElementById('error').value = '有錯誤';
+    }
+  }
+  </script>
+</body>
+</html>
