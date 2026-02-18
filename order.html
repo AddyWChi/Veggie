@@ -9,36 +9,45 @@
 </head>
 <body>
   <div class="container-fluid">
-    <header class="d-flex flex-wrap align-items-center justify-content-center py-3 mb-2">
-      <ul class="nav">
-        <li>
-          <button class="nav-link active px-2 link-secondary" id="btnMenuAll" onclick="showMenu(-1, 1)">- 全 -</button>
-        </li>
-        <li>
-          <button class="nav-link active px-2 link-secondary" id="btnMenu1" onclick="showMenu(1, 1)">無蛋奶素</button>
-        </li>
-        <li>
-          <button class="nav-link active px-2 link-secondary" id="btnMenu2" onclick="showMenu(2, 1)">蔬菜類</button>
-        </li>
-        <li>
-          <button class="nav-link active px-2 link-secondary" id="btnMenu3" onclick="showMenu(3, 1)">熟食區</button>
-        </li>
-        <li>
-          <button class="nav-link active px-2 link-secondary" id="btnMenu4" onclick="showMenu(4, 1)">蛋奶素</button>
-        </li>
-        <li>
-          <button class="nav-link active px-2 link-secondary" id="btnMenu5" onclick="showMenu(5, 1)">素漢堡</button>
-        </li>
-        <li>
-          <input type="text" class="mx-2" id="totalAmt" placeholder=" $ 訂單..." disabled>
-        </li>
-        <li>
-          <button type="button" class="btn btn-warning mx-2" onclick="clearOrder()">新單</button>
-        </li>
-        <li>
-          <button type="button" class="btn btn-warning mx-2" onclick="calcChange()">結 賬</button>
-        </li>
-      </ul>
+    <!-- class="d-flex flex-wrap align-items-center justify-content-center py-3 mb-2" -->
+    <header>
+      <div class="d-flex flex-wrap justify-content-center mb-2 mt-2">
+        <ul class="nav">
+          <li>
+            <button class="nav-link active px-2 link-secondary" id="btnMenuAll" onclick="showMenu(-1, 1)">- 全 -</button>
+          </li>
+          <li>
+            <button class="nav-link px-2 link-secondary" id="btnMenu1" onclick="showMenu(1, 1)">無蛋奶素</button>
+          </li>
+          <li>
+            <button class="nav-link px-2 link-secondary" id="btnMenu2" onclick="showMenu(2, 1)">蔬菜類</button>
+          </li>
+          <li>
+            <button class="nav-link px-2 link-secondary" id="btnMenu3" onclick="showMenu(3, 1)">熟食區</button>
+          </li>
+          <li>
+            <button class="nav-link px-2 link-secondary" id="btnMenu4" onclick="showMenu(4, 1)">蛋奶素</button>
+          </li>
+          <li>
+            <button class="nav-link px-2 link-secondary" id="btnMenu5" onclick="showMenu(5, 1)">素漢堡</button>
+          </li>
+          <li>
+            <button class="nav-link px-2 link-secondary" id="btnMenu5" onclick="showMenu(6, 1)">加購區</button>
+          </li>
+          <li>
+            <input type="text" class="mx-2" id="totalAmt" placeholder=" $ 訂單..." disabled>
+          </li>
+          <li>
+            <button type="button" id="btnClearOrder" class="btn btn-warning mx-1" onclick="clearOrder()">新 單</button>
+          </li>
+          <li>
+            <button type="button" id="btnCalcChange" class="btn btn-warning mx-1" onclick="calcChange()">結 賬</button>
+          </li>
+          <li>
+            <button type="button" id="btnShowChangeOrder" class="btn btn-warning mx-2" onclick="showChangeOrder()">改單</button>
+          </li>
+        </ul>
+      </div>
     </header>
     <div>
       <nav aria-label="Page navigation">
@@ -79,6 +88,18 @@
         { name: "金針菇 大", price: 55 }, { name: "雪白菇", price: 55 },
         { name: "鹽酥G 小", price: 35 }, { name: "鹽酥G 大", price: 55 },
         { name: "地瓜條 小", price: 35 }, { name: "地瓜條 大", price: 55 },
+        { name: "米雪", price: 30 }, { name: "烤米雪", price: 35 },
+        { name: "豆干", price: 30 }, { name: "豆包腸", price: 30 },
+        { name: "銀絲卷", price: 30 }, { name: "蔬菜餅", price: 30 },
+        { name: "香椿餅", price: 35 }, { name: "蘿蔔糕", price: 30 },
+        { name: "小熱狗", price: 30 }, { name: "傳統豆腐", price: 35 },
+        { name: "素豆G", price: 35 }, { name: "芋粿签", price: 35 },
+        { name: "黃金芋球", price: 40 }, { name: "炸餛飩", price: 40 },
+        { name: "百頁豆腐", price: 40 }, { name: "卡拉G腿", price: 50 },
+        { name: "蚵仔酥", price: 55 }, { name: "G米花", price: 55 },
+        { name: "海苔風味炸G", price: 70 }, { name: "泰式炸G", price: 70 },
+        { name: "韓式炸G", price: 70 }, { name: "豪大G排", price: 75 },
+        { name: "豪大G排+薯條", price: 100 },
       ],
       // 蔬菜類, key == 2
       "2": [
@@ -96,21 +117,43 @@
         { name: "甜不辣 小", price: 35 }, { name: "甜不辣 大", price: 55 },
         { name: "素魷魚呼啦圈 5個", price: 40 }, { name: "素魷魚呼啦圈 9個", price: 60 },
         { name: "鷄蛋豆腐 半盒", price: 35 }, { name: "鷄蛋豆腐 整盒", price: 60 },
+        { name: "乳酪棒", price: 20 }, { name: "聰明小丸子", price: 40 },
+        { name: "咖哩小G塊", price: 40 },
+        { name: "單點豬G牛", price: 50 }, { name: "黃金蝦", price: 60 },
+        { name: "披薩", price: 55 }, { name: "月亮菇排", price: 70 },
+        { name: "碳烤G排", price: 80 }, { name: "凱薩", price: 85 },
       ],
       // 素漢堡, key == 5
       "5": [
         { name: "素食大亨堡", price: 65 }, { name: "咔啦潛艇堡", price: 70 },
-        { name: "叉燒潛艇堡", price: 70 },
+        { name: "叉燒潛艇堡", price: 70 }, { name: "豆包漢堡", price: 75 },
+        { name: "龍蝦漢堡", price: 80 }, { name: "豬排漢堡", price: 70 },
+        { name: "G排漢堡", price: 70 }, { name: "牛排漢堡", price: 70 },
+        { name: "香辣G腿漢堡", price: 70 }, { name: "烤鴨素漢堡", price: 70 },
+        { name: "炸蝦漢堡", price: 70 },
+      ],
+      // 加購區, key == 6
+      "6": [
+        { name: "微笑薯餅", price: 30 }, { name: "薯條", price: 30 },
+        { name: "乳酪棒x3", price: 45 },
       ]
     };
+    let _strColl = {
+      "btn_ChangeOrder": [{ tw: "改單" }, { en: "Change Order" }],
+    };
+
+    let _sessionKey = "veggiBill";
+    let _backOrderSessionKey = "veggiBackOrder";
+    let _orderNameKey = "veggieOrderName";
 
     let _columnCount = 4;     // Number of columns. Ex: 1,2,3,4,6,12
-    let _cellsPerPage = 10;   // Number of menu item per page
+    let _cellsPerPage = 20;   // Number of menu item per page
     let _currentPage = 1;     // Current page number
     let _currentFilter = -1;  // Initial value is -1.
     let _calcChangeFileName = "calcChange.html";
-    let _sessionKey = "veggiBill";
+    let _orderCustomerName;    // customer name for the order
     let _order = {};
+    let _backOrderStr;
     let _totalOrderAmt = 0;
     let _keys = Object.keys(_menu).map(k => k.trim());
     let _orderListNode = document.getElementById("orderList");
@@ -118,11 +161,24 @@
     let _pageNumNode = document.getElementById("pageNum");
     let _pagePreNode = document.getElementById("pagePre");
     let _pageNextNode = document.getElementById("pageNext");
+    let _showChangeOrderBtnNode = document.getElementById("btnShowChangeOrder");
 
-    document.addEventListener("DOMContentLoaded", () => {
-      console.log("Document loaded!");
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Document loaded!');
       showMenu(-1, 1);
     });
+
+    window.addEventListener('message', (event) => {
+      if (event.data.type === _backOrderSessionKey) {
+        console.log('Received from child tab: ' + event.data.payload);
+        _backOrderStr = event.data.payload;
+      }
+      if (event.data.type === _orderNameKey) {
+        console.log('Received from child tab: ' + event.data.payload);
+        _orderCustomerName = event.data.payload;
+      }
+    });
+
 
     function showMenu(filter, selectPage) {
       _currentFilter = filter;
@@ -140,15 +196,15 @@
         // Show only selected section, the key in JSON object
         if (filter == -1 || i == (filter - 1)) {
           for (let menuItem = 0; menuItem < _menu[_keys[i]].length; menuItem++) {
-            console.log("_currentPage: " + _currentPage + " itemCount: " + itemCount);
+            console.log("  > _currentPage: " + _currentPage + " itemCount: " + itemCount);
             itemCount++;
             // Only show items on the current page
             if ((itemCount <= ((selectPage - 1) * _cellsPerPage))
               || ((itemCount + 1) > (selectPage * _cellsPerPage + 1))) {
-              console.log("skip: " + _menu[_keys[i]][menuItem].name + " (" + _menu[_keys[i]][menuItem].price + ")");
+              console.log("  > skip: " + _menu[_keys[i]][menuItem].name + " (" + _menu[_keys[i]][menuItem].price + ")");
               continue;
             }
-            console.log("show: " + _menu[_keys[i]][menuItem].name + " (" + _menu[_keys[i]][menuItem].price + ")");
+            console.log("  > show: " + _menu[_keys[i]][menuItem].name + " (" + _menu[_keys[i]][menuItem].price + ")");
             if (cellCount > _columnCount) {
               rowDiv = document.createElement("div");
               rowDiv.classList.add("row");
@@ -186,13 +242,13 @@
       let isShowingLastPage = false;
       let quotient = Math.floor(itemCount / _cellsPerPage);
       let remainder = itemCount % _cellsPerPage;
-      console.log('function: setNextPageState - quotient:' + quotient + ' remainder:' + remainder + ' _currentPage:' + _currentPage);
+      console.log('  > quotient:' + quotient + ' remainder:' + remainder + ' _currentPage:' + _currentPage);
       if (remainder != 0) {
         isShowingLastPage = ((quotient + 1) == _currentPage);
       } else {
         isShowingLastPage = (quotient == _currentPage);
       }
-      console.log(Date.now() + ' function: setNextPageState - isShowingLastPage:' + isShowingLastPage);
+      console.log('  > isShowingLastPage:' + isShowingLastPage);
       if (isShowingLastPage) {
         _pageNextNode.disabled = true;
       } else {
@@ -217,16 +273,43 @@
 
     function calcChange() {
       console.log(Date.now() + ' function: calcChange - no parameter');
-      sessionStorage.removeItem(_sessionKey);
-      sessionStorage.setItem(_sessionKey, JSON.stringify(_order));
-      window.open(_calcChangeFileName, '_blank');
+      if (Object.keys(_order).length === 0 && _order.constructor === Object) {
+        console.log('  > Empty order, no bill.');
+        window.alert("訂單是空的，無法結賬。");
+      } else {
+        sessionStorage.removeItem(_sessionKey);
+        sessionStorage.setItem(_sessionKey, JSON.stringify(_order));
+        window.open(_calcChangeFileName, '_blank');
+      }
+    }
+
+    function showChangeOrder() {
+      console.log(Date.now() + ' function: showChangeOrder - no parameter');
+      try {
+        if (_backOrderStr) {
+          const infoStr = _orderCustomerName + ' 改單。點選 OK 會刪除現有訂單。';
+          const userInput = window.confirm(infoStr);
+          if (userInput) {
+            _order = JSON.parse(_backOrderStr);
+            console.log('  > customer name: ' + _orderCustomerName + ', _order: ' + _order);
+            removeChildren(_orderListNode);
+            showOrders();
+            sumOrders();
+          }
+        } else {
+          console.log('  > Did not receive any change order or data is empty from child window.');
+          window.alert("沒收到改單資料。");
+        }
+      } catch {
+        document.getElementById('error').value = '有錯誤';
+      }
     }
 
     function showOrders() {
       console.log(Date.now() + ' function: showOrders - no parameter');
       try {
         for (const key in _order) {
-          console.log('showOrders - key:' + key);
+          console.log('  > key:' + key);
           const orderItem = document.createElement("div");
           orderItem.classList.add("row");
           orderItem.innerHTML = "<label class=\"col-4 d-flex justify-content-end\" >"
@@ -244,7 +327,7 @@
       console.log(Date.now() + ' function: sumOrders - no parameter');
       let total = 0;
       for (const key in _order) {
-        console.log(key + ': order count: ' + _order[key].count + ' price - ' + _order[key].price);
+        console.log('  > ' + key + ': order count: ' + _order[key].count + ' price - ' + _order[key].price);
         total += _order[key].count * _order[key].price;
       }
       if (total == 0) {
@@ -258,14 +341,13 @@
       console.log(Date.now() + ' function: addOrder - ' + key + ':$' + price);
       try {
         if (_order.hasOwnProperty(key)) {
-          console.log(Date.now() + ' function: addOrder - already has key: ' + key + '& count: ' + _order[key].count);
+          console.log(Date.now() + '  > already has key: ' + key + '& count: ' + _order[key].count);
           _order[key].count = _order[key].count + 1;
         } else {
-          console.log(Date.now() + ' function: addOrder - new key: ' + key);
           _order[key] = {};
           _order[key].price = price;
           _order[key].count = 1;
-          console.log(Date.now() + ' function: addOrder - new key: ' + key + ' & count: ' + _order[key].count);
+          console.log('  > new key: ' + key + ' & count: ' + _order[key].count);
         }
         removeChildren(_orderListNode);
         showOrders();
@@ -295,3 +377,4 @@
   </script>
 </body>
 </html>
+<!-- 20260117.p7.v1 -->

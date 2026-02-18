@@ -5,19 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <title>找零-訂單計算機</title>
+  <title>找零計算機</title>
 </head>
 <body>
   <div class="col-6 mx-auto text-center py-3 mb-2">
-    客人 <input type="text" class="mx-2" id="customerId" placeholder=" 名...">   
+    客人 <input type="text" class="mx-2" id="customerId" placeholder=" 名..."> <span class="text-danger" id="errorNameReq"></span>
   </div>
-  <div class="container-fluid"> 
+  <div class="container-fluid">
     <div class="row my-2">
-      <button type="button" class="btn btn-info" onclick="clearAmount()">再算一次</button> 
+      <button type="button" class="btn btn-info col-md col-sm" onclick="clearAmount()">再算一次</button>
+      <button type="button" class="btn btn-outline-primary col-md col-sm" onclick="changeOrder()">改單</button>
     </div>
     <div class="row my-2">
-      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(300)"> 300 </button>    
-      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(100)"> 100 </button>    
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(300)"> 300 </button>
+      <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(100)"> 100 </button>
       <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(90)"> 90 </button>
     </div>
     <div class="row my-2">
@@ -40,144 +41,174 @@
       <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(1000)"> 1000 </button>
     </div>
     <div class="row my-2">
-      <button type="button" class="btn btn-info" onclick="clearAmount()">再算一次</button> 
+      <button type="button" class="btn btn-info col-md col-sm" onclick="clearAmount()">再算一次</button>
+      <button type="button" class="btn btn-outline-primary col-md col-sm" onclick="changeOrder()">改單</button>
     </div>
 
     <div class="col-6 mx-auto text-center">
-      $ <input type="text" class="mx-2" id="customerPaid" placeholder=" $ 收到金額..." disabled> 
-      <span class = "fs-4"> - </span> $ <input type="text" class="mx-2" id="totalAmt" placeholder=" $ 訂單..." disabled> 
-      <span class = "fs-4"> = </span> $ <input type="text" class="mx-2" id="totalChg" placeholder=" $ 找零..." disabled> 
+      $ <input type="text" class="mx-2" id="customerPaid" placeholder=" $ 收到金額..." disabled>
+      <span class="fs-4"> - </span> $ <input type="text" class="mx-2" id="totalAmt" placeholder=" $ 訂單..." disabled>
+      <span class="fs-4"> = </span> $ <input type="text" class="mx-2" id="totalChg" placeholder=" $ 找零..." disabled>
     </div>
   </div>
-  <div id="error"> </div>
   <div id="orderList" class="container-fluid my-3"> </div>
- 
+
   <script>
-  let _sessionKey = "veggiBill";
-  let _orderStr = sessionStorage.getItem(_sessionKey);
-  let _order = JSON.parse(_orderStr);
-  let _customerPaid = 0;
-  let _totalOrderAmt = 0;
-  let _totalChgColor;
-  let _orderListNode = document.getElementById("orderList");
-  let _customerIdboxNode = document.getElementById("customerId");
-  let _customerPaidNode = document.getElementById("customerPaid");
-  let _totalChgNode = document.getElementById("totalChg");
+    let _sessionKey = "veggiBill";
+    let _backOrderSessionKey = "veggiBackOrder";
+    let _orderNameKey = "veggieOrderName";
 
-  document.addEventListener("DOMContentLoaded", () => {   
-    console.log("Document loaded!");
-    showOrders();
-    sumOrders();
-    // RGB format
-    _totalChgColor = window.getComputedStyle(_customerPaidNode).color;
-  });
-  _customerIdboxNode.addEventListener("input", function() {
-      document.title = _customerIdboxNode.value || "-找零";
-  });
+    let _orderStr = sessionStorage.getItem(_sessionKey);
+    let _order = JSON.parse(_orderStr);
+    let _customerPaid = 0;
+    let _totalOrderAmt = 0;
+    let _totalChgColor;
+    let _orderListNode = document.getElementById("orderList");
+    let _customerIdboxNode = document.getElementById("customerId");
+    let _customerPaidNode = document.getElementById("customerPaid");
+    let _totalChgNode = document.getElementById("totalChg");
+
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log('Document loaded!');
+      showOrders();
+      sumOrders();
+      // RGB format
+      _totalChgColor = window.getComputedStyle(_customerPaidNode).color;
+    });
+    _customerIdboxNode.addEventListener('input', function () {
+      document.title = _customerIdboxNode.value || '-找零';
+    });
 
 
-  function removeChildren(pNode) {
-    console.log(Date.now() + ' function: removeChildren');
-    while (pNode.firstChild) {
-      pNode.removeChild(pNode.firstChild);
-    }  
-  }
-  
-  function paidAmount(addAmt) {
-    console.log(Date.now() + ' function: paidAmount - addAmt: ' + addAmt);
-    //_customerPaid = _customerPaid + addAmt;  
-    _customerPaid += addAmt;  
-    document.getElementById('customerPaid').value = _customerPaid;
-    document.getElementById('totalChg').value = _customerPaid - _totalOrderAmt;
-    if (_customerPaid - _totalOrderAmt < 0) {
-      _totalChgNode.style.color = "red";
-    } else {
-      _totalChgNode.style.color = _totalChgColor;
-    }    
-  }  
-  
-  function clearAmount() {
-    console.log(Date.now() + ' function: clearAmount - no parameter');
-    _customerPaid = 0;
-    // Update formula view 
-    paidAmount(0);
-  }
-
-  function showOrders() {
-    console.log(Date.now() + ' function: showOrders - no parameter');
-    console.log(' function: showOrders - ' + _orderStr);
-    try {
-      for (const key in _order) {
-        console.log('showOrders - key:' + key);
-        const orderItem = document.createElement("div");
-        orderItem.classList.add("row");
-        orderItem.innerHTML = "<label class=\"col-4 d-flex justify-content-end\" >" 
-                                 + key + " (x" + _order[key].count + ") : $ " + (_order[key].count*_order[key].price) + "</label>"
-                              + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-primary\" onclick=\"addOrder('" + key + "')\" > + 1 </button>" 
-                              + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-info\" onclick=\"removeOrder('" + key + "')\" > - 1 </button>";
-        _orderListNode.appendChild(orderItem);
+    function removeChildren(pNode) {
+      console.log(Date.now() + ' function: removeChildren');
+      while (pNode.firstChild) {
+        pNode.removeChild(pNode.firstChild);
       }
-    } catch {
-      document.getElementById('error').value = 'Error';
     }
-  }
-  
-  function sumOrders() {
-    console.log(Date.now() + ' function: sumOrders - no parameter');
-    let total = 0;    
-    for (const key in _order) {
-      console.log(key + ': order count: ' + _order[key].count + ' price - ' + _order[key].price);
-      total += _order[key].count * _order[key].price ;
-    }
-    if (total == 0) {
-      document.getElementById('totalAmt').value = "$ 訂單...";
-      _totalOrderAmt = 0;
-    } else {
-      document.getElementById('totalAmt').value = total;  
-      _totalOrderAmt = total;
-    }
-    // Update formula view 
-    paidAmount(0);
-  }
 
-  function addOrder(key, price) {
-    console.log(Date.now() + ' function: addOrder - ' + key + ':$' + price);
-    try {
+    function paidAmount(addAmt) {
+      console.log(Date.now() + ' function: paidAmount - addAmt: ' + addAmt);
+      _customerPaid += addAmt;
+      document.getElementById('customerPaid').value = _customerPaid;
+      document.getElementById('totalChg').value = _customerPaid - _totalOrderAmt;
+      if (_customerPaid - _totalOrderAmt < 0) {
+        _totalChgNode.style.color = "red";
+      } else {
+        _totalChgNode.style.color = _totalChgColor;
+      }
+    }
+
+    function clearAmount() {
+      console.log(Date.now() + ' function: clearAmount - no parameter');
+      _customerPaid = 0;
+      // Update formula view
+      paidAmount(0);
+    }
+
+    function changeOrder() {
+      console.log(Date.now() + ' function: changeOrder - no parameter');
+      let custName = _customerIdboxNode.value.trim();
+      if (custName.length === 0) {
+        custName = prompt("請輸入客人名:");
+      }
+      if (custName.length > 0) {
+        _customerIdboxNode.value = custName;
+        document.getElementById('errorNameReq').innerText = '';
+      } else {
+        document.getElementById('errorNameReq').innerText = '需要輸入客人名';
+        return;
+      }
+      console.log('  > _order : ' + JSON.stringify(_order));
+      if (window.opener) {
+        window.opener.postMessage({
+          type: _backOrderSessionKey,
+          payload: JSON.stringify(_order)
+        }, '*');
+        window.opener.postMessage({
+          type: _orderNameKey,
+          payload: custName
+        }, '*');
+      }
+      window.alert('請到訂單計算機頁面點選 "改單" 讀取資料');
+      window.close();
+    }
+
+    function showOrders() {
+      console.log(Date.now() + ' function: showOrders - no parameter');
+      console.log('  > _orderStr - ' + _orderStr);
+      try {
+        for (const key in _order) {
+          console.log('  > key:' + key);
+          const orderItem = document.createElement("div");
+          orderItem.classList.add("row");
+          orderItem.innerHTML = "<label class=\"col-4 d-flex justify-content-end\" >"
+            + key + " (x" + _order[key].count + ") : $ " + (_order[key].count * _order[key].price) + "</label>"
+            + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-primary\" onclick=\"addOrder('" + key + "')\" > + 1 </button>"
+            + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-info\" onclick=\"removeOrder('" + key + "')\" > - 1 </button>";
+          _orderListNode.appendChild(orderItem);
+        }
+      } catch {
+        document.getElementById('error').value = 'Error';
+      }
+    }
+
+    function sumOrders() {
+      console.log(Date.now() + ' function: sumOrders - no parameter');
+      let total = 0;
+      for (const key in _order) {
+        console.log('  > ' + key + ': order count: ' + _order[key].count + ' price - ' + _order[key].price);
+        total += _order[key].count * _order[key].price;
+      }
+      if (total == 0) {
+        document.getElementById('totalAmt').value = "$ 訂單...";
+        _totalOrderAmt = 0;
+      } else {
+        document.getElementById('totalAmt').value = total;
+        _totalOrderAmt = total;
+      }
+      // Update formula view
+      paidAmount(0);
+    }
+
+    function addOrder(key, price) {
+      console.log(Date.now() + ' function: addOrder - ' + key + ':$' + price);
+      try {
         if (_order.hasOwnProperty(key)) {
-          console.log(Date.now() + ' function: addOrder - already has key: ' + key + '& count: ' + _order[key].count);
+          console.log('  > already has key: ' + key + '& count: ' + _order[key].count);
           _order[key].count = _order[key].count + 1;
         } else {
-          console.log(Date.now() + ' function: addOrder - new key: ' + key);
           _order[key] = {};
           _order[key].price = price;
           _order[key].count = 1;
-          console.log(Date.now() + ' function: addOrder - new key: ' + key + ' & count: ' + _order[key].count);
+          console.log('  > new key: ' + key + ' & count: ' + _order[key].count);
         }
         removeChildren(_orderListNode);
         showOrders();
         sumOrders();
-    } catch {
+      } catch {
         document.getElementById('error').value = '有錯誤';
-    }   
-  }
-  
-  function removeOrder(key) {
-    console.log(Date.now() + ' function: removeOrder - ' + key);
-    try {
+      }
+    }
+
+    function removeOrder(key) {
+      console.log(Date.now() + ' function: removeOrder - ' + key);
+      try {
         if (_order.hasOwnProperty(key)) {
           if (_order[key].count > 1) {
             _order[key].count = _order[key].count - 1;
           } else {
-            delete _order[key]; 
+            delete _order[key];
           }
         }
         removeChildren(_orderListNode);
         showOrders();
         sumOrders();
-    } catch {
+      } catch {
         document.getElementById('error').value = '有錯誤';
+      }
     }
-  }
   </script>
 </body>
 </html>
+<!-- calcChange-7-v1-20260117-AllowBackOrderEdit -->
