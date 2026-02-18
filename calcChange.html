@@ -45,12 +45,25 @@
       <button type="button" class="btn btn-outline-primary col-md col-sm" onclick="changeOrder()">改單</button>
     </div>
 
-    <div class="col-6 mx-auto text-center">
-      $ <input type="text" class="mx-2" id="customerPaid" placeholder=" $ 收到金額..." disabled>
-      <span class="fs-4"> - </span> $ <input type="text" class="mx-2" id="totalAmt" placeholder=" $ 訂單..." disabled>
-      <span class="fs-4"> = </span> $ <input type="text" class="mx-2" id="totalChg" placeholder=" $ 找零..." disabled>
+    <div class="d-flex align-items-center text-center flex-nowrap mx-auto" style="max-width: 500px;">
+      <div class="input-group input-group-md">
+        <span class="input-group-text">$</span>
+        <input type="text" class="form-control" id="customerPaid" placeholder="收到" readonly>
+      </div>
+      <span class="mx-1">−</span>
+      <div class="input-group input-group-md">
+        <span class="input-group-text">$</span>
+        <input type="text" class="form-control" id="totalAmt" placeholder="訂單" readonly>
+      </div>
+      <span class="mx-1">=</span>
+      <div class="input-group input-group-md">
+        <span class="input-group-text">$</span>
+        <input type="text" class="form-control" id="totalChg" placeholder="找零" readonly>
+      </div>
     </div>
   </div>
+
+  <div id="error"> </div>
   <div id="orderList" class="container-fluid my-3"> </div>
 
   <script>
@@ -68,10 +81,10 @@
     let _customerPaidNode = document.getElementById("customerPaid");
     let _totalChgNode = document.getElementById("totalChg");
 
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener('DOMContentLoaded', () => {
       console.log('Document loaded!');
       showOrders();
-      sumOrders();
+      sumCalcChangeOrders();
       // RGB format
       _totalChgColor = window.getComputedStyle(_customerPaidNode).color;
     });
@@ -81,14 +94,14 @@
 
 
     function removeChildren(pNode) {
-      console.log(Date.now() + ' function: removeChildren');
+      console.log(Date.now() + ' func:removeChildren(pNode)');
       while (pNode.firstChild) {
         pNode.removeChild(pNode.firstChild);
       }
     }
 
     function paidAmount(addAmt) {
-      console.log(Date.now() + ' function: paidAmount - addAmt: ' + addAmt);
+      console.log(Date.now() + ` func:paidAmount(addAmt:${addAmt})`);
       _customerPaid += addAmt;
       document.getElementById('customerPaid').value = _customerPaid;
       document.getElementById('totalChg').value = _customerPaid - _totalOrderAmt;
@@ -100,61 +113,119 @@
     }
 
     function clearAmount() {
-      console.log(Date.now() + ' function: clearAmount - no parameter');
+      console.log(Date.now() + ' func:clearAmount()');
       _customerPaid = 0;
       // Update formula view
       paidAmount(0);
     }
 
     function changeOrder() {
-      console.log(Date.now() + ' function: changeOrder - no parameter');
-      let custName = _customerIdboxNode.value.trim();
-      if (custName.length === 0) {
-        custName = prompt("請輸入客人名:");
+      console.log(Date.now() + ' func:changeOrder()');
+      try {
+        let custName = _customerIdboxNode.value.trim();
+        if (custName.length === 0) {
+          custName = prompt('請輸入客人名:');
+        }
+        if (custName.length > 0) {
+          _customerIdboxNode.value = custName;
+          document.getElementById('errorNameReq').innerText = '';
+        } else {
+          document.getElementById('errorNameReq').innerText = '需要輸入客人名';
+          return;
+        }
+        console.log('  > _order : ' + JSON.stringify(_order));
+        if (window.opener) {
+          window.opener.postMessage({
+            type: _backOrderSessionKey,
+            payload: JSON.stringify(_order)
+          }, '*');
+          window.opener.postMessage({
+            type: _orderNameKey,
+            payload: custName
+          }, '*');
+        }
+        window.alert('請到訂單計算機頁面點選 "改單" 讀取資料');
+        window.close();
       }
-      if (custName.length > 0) {
-        _customerIdboxNode.value = custName;
-        document.getElementById('errorNameReq').innerText = '';
-      } else {
-        document.getElementById('errorNameReq').innerText = '需要輸入客人名';
-        return;
+      catch (error) {
+        console.log(`  > func:changeOrder, error:${error}`);
+        document.getElementById('error').value = '改單有錯誤(changeOrder)';
       }
-      console.log('  > _order : ' + JSON.stringify(_order));
-      if (window.opener) {
-        window.opener.postMessage({
-          type: _backOrderSessionKey,
-          payload: JSON.stringify(_order)
-        }, '*');
-        window.opener.postMessage({
-          type: _orderNameKey,
-          payload: custName
-        }, '*');
-      }
-      window.alert('請到訂單計算機頁面點選 "改單" 讀取資料');
-      window.close();
     }
 
+    // Display current order list
     function showOrders() {
-      console.log(Date.now() + ' function: showOrders - no parameter');
-      console.log('  > _orderStr - ' + _orderStr);
+      console.log(Date.now() + ' func:showOrders()');
+      let txBoxid = 1;
       try {
         for (const key in _order) {
-          console.log('  > key:' + key);
-          const orderItem = document.createElement("div");
-          orderItem.classList.add("row");
-          orderItem.innerHTML = "<label class=\"col-4 d-flex justify-content-end\" >"
-            + key + " (x" + _order[key].count + ") : $ " + (_order[key].count * _order[key].price) + "</label>"
-            + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-primary\" onclick=\"addOrder('" + key + "')\" > + 1 </button>"
-            + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-info\" onclick=\"removeOrder('" + key + "')\" > - 1 </button>";
-          _orderListNode.appendChild(orderItem);
+          let tbId = 'tbId' + txBoxid++;
+          // console.log('  > key:' + key);
+          const row = document.createElement('div');
+          row.classList.add('row', 'mb-2');
+
+          const div1 = document.createElement('div');
+          div1.className = 'col-12 col-md-3 d-flex justify-content-center justify-content-md-end align-items-center';
+          const label = document.createElement('label');
+          label.textContent = key + ' (x' + _order[key].count + ') : $ ' + (_order[key].count * _order[key].price);
+          div1.appendChild(label);
+
+          // Controls wrapper for plus button, count textbox, minus button
+          const controlsRow = document.createElement('div');
+          controlsRow.className = 'col-12 col-md-9';
+          const innerRow = document.createElement('div');
+          innerRow.className = 'row g-2';
+
+          const div2 = document.createElement('div');
+          div2.className = 'col-5';
+          const btnPlus = document.createElement('button');
+          btnPlus.className = 'btn btn-outline-primary w-100';
+          btnPlus.type = 'button';
+          btnPlus.textContent = ' + 加 + ';
+          btnPlus.onclick = () => addOrderCount(key, tbId);
+          div2.appendChild(btnPlus);
+
+          const div3 = document.createElement('div');
+          div3.className = 'col-2';
+          const tbCount = document.createElement('input');
+          tbCount.type = 'text';
+          tbCount.classList.add('text-center', 'w-100', 'form-control');
+          tbCount.value = 1;
+          tbCount.setAttribute('id', tbId);
+          tbCount.addEventListener('click', function () { this.select(); });
+          tbCount.addEventListener('focus', function () { this.select(); });
+          tbCount.addEventListener('input', function () {
+            // remove non-digits
+            this.value = this.value.replace(/\D/g, '');
+          });
+          div3.appendChild(tbCount);
+
+          const div4 = document.createElement('div');
+          div4.className = 'col-5';
+          const btnMinus = document.createElement('button');
+          btnMinus.className = 'btn btn-outline-info w-100';
+          btnMinus.type = 'button';
+          btnMinus.textContent = ' - 減 - ';
+          btnMinus.onclick = () => removeOrderCount(key, tbId);
+          div4.appendChild(btnMinus);
+
+          innerRow.appendChild(div2);    // plus button
+          innerRow.appendChild(div3);    // count textbox
+          innerRow.appendChild(div4);    // minus button
+          controlsRow.appendChild(innerRow);
+
+          row.appendChild(div1);         // label
+          row.appendChild(controlsRow);  // controls
+          _orderListNode.appendChild(row);
         }
-      } catch {
-        document.getElementById('error').value = 'Error';
+      } catch (error) {
+        console.log(`  > func:showOrders, error:${error}`);
+        document.getElementById('error').value = '產生選單過程有錯(showOrders)';
       }
     }
 
-    function sumOrders() {
-      console.log(Date.now() + ' function: sumOrders - no parameter');
+    function sumCalcChangeOrders() {
+      console.log(Date.now() + ' func:sumCalcChangeOrders()');
       let total = 0;
       for (const key in _order) {
         console.log('  > ' + key + ': order count: ' + _order[key].count + ' price - ' + _order[key].price);
@@ -167,48 +238,82 @@
         document.getElementById('totalAmt').value = total;
         _totalOrderAmt = total;
       }
-      // Update formula view
+      // Set to zero to not change value but update formula view
       paidAmount(0);
     }
 
-    function addOrder(key, price) {
-      console.log(Date.now() + ' function: addOrder - ' + key + ':$' + price);
+    function addOrderCount(key, countTextboxId) {
+      console.log(Date.now() + ` func:addOrderCount(key:${key}, countTextboxId:${countTextboxId})`);
       try {
-        if (_order.hasOwnProperty(key)) {
-          console.log('  > already has key: ' + key + '& count: ' + _order[key].count);
-          _order[key].count = _order[key].count + 1;
-        } else {
-          _order[key] = {};
-          _order[key].price = price;
-          _order[key].count = 1;
-          console.log('  > new key: ' + key + ' & count: ' + _order[key].count);
-        }
-        removeChildren(_orderListNode);
-        showOrders();
-        sumOrders();
-      } catch {
-        document.getElementById('error').value = '有錯誤';
+        let count = parseInt(document.getElementById(countTextboxId).value);
+        addOrder(key, count);
+      } catch (error) {
+        console.log(`  > func:addOrderCount, error:${error}`);
+        document.getElementById('error').value = '加點有錯誤(addOrderCount)';
       }
     }
 
-    function removeOrder(key) {
-      console.log(Date.now() + ' function: removeOrder - ' + key);
+    // At first time being called, it initializes and adds one instance,
+    // with the count and price to the array.
+    // In subsequent calls, it increments or decrements counter.
+    function addOrder(key, count, price) {
+      console.log(Date.now() + ` func:addOrder(key:${key}, count:${count}, price:$${price})`);
       try {
         if (_order.hasOwnProperty(key)) {
-          if (_order[key].count > 1) {
-            _order[key].count = _order[key].count - 1;
-          } else {
-            delete _order[key];
+          console.log('  > Already has key: ' + key + '& count: ' + _order[key].count);
+          _order[key].count = _order[key].count + count;
+        } else {
+          if (price === undefined || price === null) {
+            console.log(`  > Price is invalid for new key: ${key}`);
+            document.getElementById('error').value =
+              `Price setting is missing value or invalid for new key: ${key}`;
+            return;
           }
+          _order[key] = {};
+          _order[key].price = price;
+          _order[key].count = count;
+          console.log(`  > New key: ${key}, count: ${_order[key].count}`);
         }
         removeChildren(_orderListNode);
         showOrders();
-        sumOrders();
-      } catch {
-        document.getElementById('error').value = '有錯誤';
+        sumCalcChangeOrders();
+      } catch (error) {
+        console.log(`  > func:addOrder, error:${error}`);
+        document.getElementById('error').value = '點單有錯誤(addOrder)';
+      }
+    }
+
+    function removeOrderCount(key, countTextboxId) {
+      console.log(Date.now() + ` func:removeOrderCount(key:${key}, countTextboxId:${countTextboxId})`);
+      try {
+        let count = parseInt(document.getElementById(countTextboxId).value);
+        removeOrder(key, count);
+      } catch (error) {
+        console.log(`  > func:removeOrderCount, error:${error}`);
+        document.getElementById('error').value = '刪點有錯誤(removeOrderCount)';
+      }
+    }
+
+    function removeOrder(key, count) {
+      console.log(Date.now() + ` func:removeOrder(key:${key}, count:${count})`);
+      try {
+        if (_order.hasOwnProperty(key)) {
+          if (_order[key].count >= 1) {
+            _order[key].count = _order[key].count - count;
+          }
+          if (_order[key].count <= 0) {
+            delete _order[key];
+          }
+          removeChildren(_orderListNode);
+          showOrders();
+          sumCalcChangeOrders();
+        }
+      } catch (error) {
+        console.log(`  > func:removeOrder, error:${error}`);
+        document.getElementById('error').value = '刪單有錯誤(removeOrder)';
       }
     }
   </script>
 </body>
 </html>
-<!-- calcChange-7-v1-20260117-AllowBackOrderEdit -->
+<!-- calcChange-8v2 -->

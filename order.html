@@ -71,7 +71,7 @@
   </div>
 
   <div id="error"> </div>
-  <div id="menuList" class="container-fluid my-3"> </div>
+  <div id="menuList" class="container-fluid my-3"> </div> <!-- mt-3-->
   <div id="orderList" class="container-fluid my-3"> </div>
 
   <script>
@@ -138,9 +138,11 @@
         { name: "乳酪棒x3", price: 45 },
       ]
     };
+
     let _strColl = {
-      "btn_ChangeOrder": [{ tw: "改單" }, { en: "Change Order" }],
+      "btn_ChangeOrder": { tw: "改單", en: "Change Order" }
     };
+    // console.log(_strColl["btn_ChangeOrder"]["en"]); // Change Order
 
     let _sessionKey = "veggiBill";
     let _backOrderSessionKey = "veggiBackOrder";
@@ -149,7 +151,7 @@
     let _columnCount = 4;     // Number of columns. Ex: 1,2,3,4,6,12
     let _cellsPerPage = 20;   // Number of menu item per page
     let _currentPage = 1;     // Current page number
-    let _currentFilter = -1;  // Initial value is -1.
+    let _currentFilter = -1;  // Initial value is -1. Ex: -1: all, 1: first key, 2: second key, ...
     let _calcChangeFileName = "calcChange.html";
     let _orderCustomerName;    // customer name for the order
     let _order = {};
@@ -169,67 +171,72 @@
     });
 
     window.addEventListener('message', (event) => {
+      // Listen to back order object from child tab
       if (event.data.type === _backOrderSessionKey) {
         console.log('Received from child tab: ' + event.data.payload);
         _backOrderStr = event.data.payload;
       }
+      // Listen to customer name from child tab
       if (event.data.type === _orderNameKey) {
         console.log('Received from child tab: ' + event.data.payload);
         _orderCustomerName = event.data.payload;
       }
     });
 
-
+    // Go through the menu items and show them as buttons
     function showMenu(filter, selectPage) {
-      _currentFilter = filter;
-      _currentPage = selectPage;
-      _pageNumNode.textContent = selectPage;
-      let itemCount = 0;    // Keep track of currently showing item
-      let cellCount = 1;
-      let rowDiv = document.createElement("div");
-      removeChildren(_menuListNode);
-      setPrePageState(selectPage);
-      rowDiv.classList.add("row");
-      _menuListNode.appendChild(rowDiv);
-      // Add menu items as buttons.
-      for (let i = 0; i < _keys.length; i++) {
-        // Show only selected section, the key in JSON object
-        if (filter == -1 || i == (filter - 1)) {
-          for (let menuItem = 0; menuItem < _menu[_keys[i]].length; menuItem++) {
-            console.log("  > _currentPage: " + _currentPage + " itemCount: " + itemCount);
-            itemCount++;
-            // Only show items on the current page
-            if ((itemCount <= ((selectPage - 1) * _cellsPerPage))
-              || ((itemCount + 1) > (selectPage * _cellsPerPage + 1))) {
-              console.log("  > skip: " + _menu[_keys[i]][menuItem].name + " (" + _menu[_keys[i]][menuItem].price + ")");
-              continue;
+      console.log(Date.now() + ` func:showMenu(filter:${filter}, selectPage:${selectPage})`);
+      try {
+        _currentFilter = filter;
+        _currentPage = selectPage;
+        _pageNumNode.textContent = selectPage;
+        let itemCount = 0;    // Keep track of currently showing item
+        let cellCount = 1;
+        let rowDiv = document.createElement("div");
+        removeChildren(_menuListNode);
+        setPrePageState(selectPage);
+        rowDiv.classList.add("row");
+        _menuListNode.appendChild(rowDiv);
+        // Add menu items as buttons.
+        for (let i = 0; i < _keys.length; i++) {
+          // Show only selected section, the key in JSON object
+          if (filter == -1 || i == (filter - 1)) {
+            for (let menuItem = 0; menuItem < _menu[_keys[i]].length; menuItem++) {
+              // console.log(`  > _currentPage:${_currentPage}, itemCount: ${itemCount}`);
+              itemCount++;
+              // Only show items on the current page
+              if ((itemCount <= ((selectPage - 1) * _cellsPerPage))
+                || ((itemCount + 1) > (selectPage * _cellsPerPage + 1))) {
+                // console.log("  > skip: " + _menu[_keys[i]][menuItem].name + " (" + _menu[_keys[i]][menuItem].price + ")");
+                continue;
+              }
+              // console.log(`  > show: ${_menu[_keys[i]][menuItem].name}(${_menu[_keys[i]][menuItem].price})`);
+              if (cellCount > _columnCount) {
+                rowDiv = document.createElement("div");
+                rowDiv.classList.add("row");
+                _menuListNode.appendChild(rowDiv);
+                cellCount = 1;
+              }
+              cellCount++;
+              const btnMenuItem = document.createElement("button");
+              btnMenuItem.type = "button";
+              btnMenuItem.textContent = _menu[_keys[i]][menuItem].name + " (" + _menu[_keys[i]][menuItem].price + ")";
+              btnMenuItem.classList.add("btn", "btn-outline-secondary", "col-md", "col-sm");
+              // Set button click function
+              btnMenuItem.onclick = () => addOrder(_menu[_keys[i]][menuItem].name, 1, _menu[_keys[i]][menuItem].price);
+              rowDiv.appendChild(btnMenuItem);
             }
-            console.log("  > show: " + _menu[_keys[i]][menuItem].name + " (" + _menu[_keys[i]][menuItem].price + ")");
-            if (cellCount > _columnCount) {
-              rowDiv = document.createElement("div");
-              rowDiv.classList.add("row");
-              _menuListNode.appendChild(rowDiv);
-              cellCount = 1;
-            }
-            cellCount++;
-            const btnMenuItem = document.createElement("button");
-            btnMenuItem.type = "button";
-            btnMenuItem.textContent = _menu[_keys[i]][menuItem].name + " (" + _menu[_keys[i]][menuItem].price + ")";
-            btnMenuItem.classList.add("btn");
-            btnMenuItem.classList.add("btn-outline-secondary");
-            btnMenuItem.classList.add("col-md");
-            btnMenuItem.classList.add("col-sm");
-            // Set button click function
-            btnMenuItem.onclick = () => addOrder(_menu[_keys[i]][menuItem].name, _menu[_keys[i]][menuItem].price);
-            rowDiv.appendChild(btnMenuItem);
           }
         }
+        setNextPageState(itemCount);
+      } catch (error) {
+        console.log(Date.now() + ` func:showMenu, error: ${error}`);
+        document.getElementById('error').value = '顯示菜單有錯誤(showMenu)';
       }
-      setNextPageState(itemCount);
     }
 
     function setPrePageState(selectPage) {
-      console.log(Date.now() + ' function: setPrePageState - selectPage:' + selectPage);
+      console.log(Date.now() + ` func:setPrePageState(selectPage:${selectPage})`);
       if (selectPage == 1) {
         _pagePreNode.disabled = true;
       } else {
@@ -238,17 +245,17 @@
     }
 
     function setNextPageState(itemCount) {
-      console.log(Date.now() + ' function: setNextPageState - itemCount:' + itemCount + ' _cellsPerPage:' + _cellsPerPage);
+      console.log(Date.now() + ` func:setNextPageState(itemCount:${itemCount}, _cellsPerPage:${_cellsPerPage})`);
       let isShowingLastPage = false;
       let quotient = Math.floor(itemCount / _cellsPerPage);
       let remainder = itemCount % _cellsPerPage;
-      console.log('  > quotient:' + quotient + ' remainder:' + remainder + ' _currentPage:' + _currentPage);
+      // console.log(`  > quotient:${quotient}, remainder:${remainder}, _currentPage:${_currentPage}`);
       if (remainder != 0) {
         isShowingLastPage = ((quotient + 1) == _currentPage);
       } else {
         isShowingLastPage = (quotient == _currentPage);
       }
-      console.log('  > isShowingLastPage:' + isShowingLastPage);
+      // console.log('  > isShowingLastPage:' + isShowingLastPage);
       if (isShowingLastPage) {
         _pageNextNode.disabled = true;
       } else {
@@ -257,14 +264,14 @@
     }
 
     function removeChildren(pNode) {
-      console.log(Date.now() + ' function: removeChildren');
+      console.log(Date.now() + ' func:removeChildren(pNode)');
       while (pNode.firstChild) {
         pNode.removeChild(pNode.firstChild);
       }
     }
 
     function clearOrder() {
-      console.log(Date.now() + ' function: clearOrder - no parameter');
+      console.log(Date.now() + ' func:clearOrder()');
       _order = {};
       document.getElementById('totalAmt').value = '';
       document.getElementById('error').value = '';
@@ -272,10 +279,10 @@
     }
 
     function calcChange() {
-      console.log(Date.now() + ' function: calcChange - no parameter');
+      console.log(Date.now() + ' func:calcChange()');
       if (Object.keys(_order).length === 0 && _order.constructor === Object) {
         console.log('  > Empty order, no bill.');
-        window.alert("訂單是空的，無法結賬。");
+        window.alert('訂單是空的，無法結賬。');
       } else {
         sessionStorage.removeItem(_sessionKey);
         sessionStorage.setItem(_sessionKey, JSON.stringify(_order));
@@ -284,10 +291,10 @@
     }
 
     function showChangeOrder() {
-      console.log(Date.now() + ' function: showChangeOrder - no parameter');
+      console.log(Date.now() + ' func:showChangeOrder()');
       try {
         if (_backOrderStr) {
-          const infoStr = _orderCustomerName + ' 改單。點選 OK 會刪除現有訂單。';
+          const infoStr = `[ ${_orderCustomerName} ] 改單。點選 OK 會刪除現有訂單`;
           const userInput = window.confirm(infoStr);
           if (userInput) {
             _order = JSON.parse(_backOrderStr);
@@ -298,36 +305,90 @@
           }
         } else {
           console.log('  > Did not receive any change order or data is empty from child window.');
-          window.alert("沒收到改單資料。");
+          window.alert('沒收到改單資料。');
         }
-      } catch {
-        document.getElementById('error').value = '有錯誤';
+      } catch (error) {
+        console.log(`  > func:showChangeOrder, error:${error}`);
+        document.getElementById('error').value = '顯示改單有錯誤(showChangeOrder)';
       }
     }
 
+    // Display current order list
     function showOrders() {
-      console.log(Date.now() + ' function: showOrders - no parameter');
+      console.log(Date.now() + ' func:showOrders()');
+      let txBoxid = 1;
       try {
         for (const key in _order) {
-          console.log('  > key:' + key);
-          const orderItem = document.createElement("div");
-          orderItem.classList.add("row");
-          orderItem.innerHTML = "<label class=\"col-4 d-flex justify-content-end\" >"
-            + key + " (x" + _order[key].count + ") : $ " + (_order[key].count * _order[key].price) + "</label>"
-            + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-primary\" onclick=\"addOrder('" + key + "')\" > + 1 </button>"
-            + " <button type=\"button\" class=\"col-4 my-1 py-2 px-3 btn btn-outline-info\" onclick=\"removeOrder('" + key + "')\" > - 1 </button>";
-          _orderListNode.appendChild(orderItem);
+          let tbId = 'tbId' + txBoxid++;
+          // console.log('  > key:' + key);
+          const row = document.createElement('div');
+          row.classList.add('row', 'mb-2');
+
+          const div1 = document.createElement('div');
+          div1.className = 'col-12 col-md-3 d-flex justify-content-center justify-content-md-end align-items-center';
+          const label = document.createElement('label');
+          label.textContent = key + ' (x' + _order[key].count + ') : $ ' + (_order[key].count * _order[key].price);
+          div1.appendChild(label);
+
+          // Controls wrapper for plus button, count textbox, minus button
+          const controlsRow = document.createElement('div');
+          controlsRow.className = 'col-12 col-md-9';
+          const innerRow = document.createElement('div');
+          innerRow.className = 'row g-2';
+
+          const div2 = document.createElement('div');
+          div2.className = 'col-5';
+          const btnPlus = document.createElement('button');
+          btnPlus.className = 'btn btn-outline-primary w-100';
+          btnPlus.type = 'button';
+          btnPlus.textContent = ' + 加 + ';
+          btnPlus.onclick = () => addOrderCount(key, tbId);
+          div2.appendChild(btnPlus);
+
+          const div3 = document.createElement('div');
+          div3.className = 'col-2';
+          const tbCount = document.createElement('input');
+          tbCount.type = 'text';
+          tbCount.classList.add('text-center', 'w-100', 'form-control');
+          tbCount.value = 1;
+          tbCount.setAttribute('id', tbId);
+          tbCount.addEventListener('click', function () { this.select(); });
+          tbCount.addEventListener('focus', function () { this.select(); });
+          tbCount.addEventListener('input', function () {
+            // remove non-digits
+            this.value = this.value.replace(/\D/g, '');
+          });
+          div3.appendChild(tbCount);
+
+          const div4 = document.createElement('div');
+          div4.className = 'col-5';
+          const btnMinus = document.createElement('button');
+          btnMinus.className = 'btn btn-outline-info w-100';
+          btnMinus.type = 'button';
+          btnMinus.textContent = ' - 減 - ';
+          btnMinus.onclick = () => removeOrderCount(key, tbId);
+          div4.appendChild(btnMinus);
+
+          innerRow.appendChild(div2);    // plus button
+          innerRow.appendChild(div3);    // count textbox
+          innerRow.appendChild(div4);    // minus button
+          controlsRow.appendChild(innerRow);
+
+          row.appendChild(div1);         // label
+          row.appendChild(controlsRow);  // controls
+          _orderListNode.appendChild(row);
         }
-      } catch {
-        document.getElementById('error').value = 'Error';
+      } catch (error) {
+        console.log(`  > func:showOrders, error:${error}`);
+        document.getElementById('error').value = '產生選單過程有錯(showOrders)';
       }
     }
 
     function sumOrders() {
-      console.log(Date.now() + ' function: sumOrders - no parameter');
+      console.log(Date.now() + ' func:sumOrders()');
       let total = 0;
       for (const key in _order) {
-        console.log('  > ' + key + ': order count: ' + _order[key].count + ' price - ' + _order[key].price);
+        console.log(`  > key:${key}, count: ${_order[key].count}, price: ${_order[key].price}`);
         total += _order[key].count * _order[key].price;
       }
       if (total == 0) {
@@ -337,44 +398,78 @@
       }
     }
 
-    function addOrder(key, price) {
-      console.log(Date.now() + ' function: addOrder - ' + key + ':$' + price);
+    function addOrderCount(key, countTextboxId) {
+      console.log(Date.now() + ` func:addOrderCount(key:${key}, countTextboxId:${countTextboxId})`);
       try {
-        if (_order.hasOwnProperty(key)) {
-          console.log(Date.now() + '  > already has key: ' + key + '& count: ' + _order[key].count);
-          _order[key].count = _order[key].count + 1;
-        } else {
-          _order[key] = {};
-          _order[key].price = price;
-          _order[key].count = 1;
-          console.log('  > new key: ' + key + ' & count: ' + _order[key].count);
-        }
-        removeChildren(_orderListNode);
-        showOrders();
-        sumOrders();
-      } catch {
-        document.getElementById('error').value = '有錯誤';
+        let count = parseInt(document.getElementById(countTextboxId).value);
+        addOrder(key, count);
+      } catch (error) {
+        console.log(`  > func:addOrderCount, error:${error}`);
+        document.getElementById('error').value = '加點有錯誤(addOrderCount)';
       }
     }
 
-    function removeOrder(key) {
-      console.log(Date.now() + ' function: removeOrder - ' + key);
+    // At first time being called, it initializes and adds one instance,
+    // with the count and price to the array.
+    // In subsequent calls, it increments or decrements counter.
+    function addOrder(key, count, price) {
+      console.log(Date.now() + ` func:addOrder(key:${key}, count:${count}, price:$${price})`);
       try {
         if (_order.hasOwnProperty(key)) {
-          if (_order[key].count > 1) {
-            _order[key].count = _order[key].count - 1;
-          } else {
-            delete _order[key];
+          console.log(`  > Already has key: ${key} & count: ${_order[key].count}`);
+          _order[key].count = _order[key].count + count;
+        } else {
+          if (price === undefined || price === null) {
+            console.log(`  > Price is invalid for new key: ${key}`);
+            document.getElementById('error').value =
+              `Price setting is missing value or invalid for new key: ${key}`;
+            return;
           }
+          _order[key] = {};
+          _order[key].price = price;
+          _order[key].count = count;
+          console.log(`  > New key: ${key}, count: ${_order[key].count}`);
         }
         removeChildren(_orderListNode);
         showOrders();
         sumOrders();
-      } catch {
-        document.getElementById('error').value = '有錯誤';
+      } catch (error) {
+        console.log(`  > func:addOrder, error:${error}`);
+        document.getElementById('error').value = '點單有錯誤(addOrder)';
+      }
+    }
+
+    function removeOrderCount(key, countTextboxId) {
+      console.log(Date.now() + ` func:removeOrderCount(key:${key}, countTextboxId:${countTextboxId})`);
+      try {
+        let count = parseInt(document.getElementById(countTextboxId).value);
+        removeOrder(key, count);
+      } catch (error) {
+        console.log(`  > func:removeOrderCount, error:${error}`);
+        document.getElementById('error').value = '刪點有錯誤(removeOrderCount)';
+      }
+    }
+
+    function removeOrder(key, count) {
+      console.log(Date.now() + ` func:removeOrder(key:${key}, count:${count})`);
+      try {
+        if (_order.hasOwnProperty(key)) {
+          if (_order[key].count >= 1) {
+            _order[key].count = _order[key].count - count;
+          }
+          if (_order[key].count <= 0) {
+            delete _order[key];
+          }
+          removeChildren(_orderListNode);
+          showOrders();
+          sumOrders();
+        }
+      } catch (error) {
+        console.log(`  > func:removeOrder, error:${error}`);
+        document.getElementById('error').value = '刪單有錯誤(removeOrder)';
       }
     }
   </script>
 </body>
 </html>
-<!-- order-7-v2 -->
+<!-- order-8v2 -->
