@@ -35,7 +35,10 @@
             <a class="nav-link px-2" id="btnMenu6" href="#" onclick="showMenu(6, 1)">加購區</a>
           </li>
           <li>
-            <input type="text" class="mx-2" id="totalAmt" placeholder=" $ 訂單..." disabled>
+            <div class="input-group input-group-md">
+              <span class="input-group-text">$</span>
+              <input type="text" class="form-control" id="totalAmt" placeholder="訂單" maxlength="6" size="6" readonly>
+            </div>
           </li>
           <li>
             <button type="button" id="btnClearOrder" class="btn btn-warning mx-1" onclick="clearOrder()">新 單</button>
@@ -44,7 +47,7 @@
             <button type="button" id="btnCalcChange" class="btn btn-warning mx-1" onclick="calcChange()">結 賬</button>
           </li>
           <li>
-            <button type="button" id="btnShowChangeOrder" class="btn btn-warning mx-2" onclick="showChangeOrder()">改單</button>
+            <button type="button" id="btnShowChangeOrder" class="btn btn-warning mx-2" onclick="showChangeOrder()">改 單</button>
           </li>
         </ul>
       </div>
@@ -504,4 +507,4 @@
   </script>
 </body>
 </html>
-<!-- order-9v1 -->
+<!-- order-9v2 -->
