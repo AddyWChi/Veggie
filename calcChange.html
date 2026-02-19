@@ -63,7 +63,7 @@
     </div>
   </div>
 
-  <div id="error"> </div>
+  <div class="text-danger" id="errMsg"> </div>
   <div id="orderList" class="container-fluid my-3"> </div>
 
   <script>
@@ -73,6 +73,7 @@
 
     let _orderStr = sessionStorage.getItem(_sessionKey);
     let _order = JSON.parse(_orderStr);
+    let _countInputTimer;     // Timer for count input box
     let _customerPaid = 0;
     let _totalOrderAmt = 0;
     let _totalChgColor;
@@ -92,6 +93,14 @@
       document.title = _customerIdboxNode.value || '-找零';
     });
 
+    function updateErrLabel(funcName, message, errException) {
+      if (funcName === undefined || funcName === null || funcName === '') {
+        document.getElementById('errMsg').innerText = '';
+      } else {
+        console.log(`  > func:${funcName}, error: ${errException}`);
+        document.getElementById('errMsg').innerText = `${message}(${funcName})`;
+      }
+    }
 
     function removeChildren(pNode) {
       console.log(Date.now() + ' func:removeChildren(pNode)');
@@ -148,8 +157,7 @@
         window.close();
       }
       catch (error) {
-        console.log(`  > func:changeOrder, error:${error}`);
-        document.getElementById('error').value = '改單有錯誤(changeOrder)';
+        updateErrLabel('changeOrder', '改單有錯誤', error);
       }
     }
 
@@ -159,15 +167,19 @@
       let txBoxid = 1;
       try {
         for (const key in _order) {
+          let rowId = 'rowId' + txBoxid++;
           let tbId = 'tbId' + txBoxid++;
+          let lbId = 'lbId' + txBoxid++;
           // console.log('  > key:' + key);
           const row = document.createElement('div');
+          row.setAttribute('id', rowId);
           row.classList.add('row', 'mb-2');
 
           const div1 = document.createElement('div');
           div1.className = 'col-12 col-md-3 d-flex justify-content-center justify-content-md-end align-items-center';
           const label = document.createElement('label');
-          label.textContent = key + ' (x' + _order[key].count + ') : $ ' + (_order[key].count * _order[key].price);
+          label.textContent = updateLabel(lbId, key);
+          label.setAttribute('id', lbId);
           div1.appendChild(label);
 
           // Controls wrapper for plus button, count textbox, minus button
@@ -181,8 +193,8 @@
           const btnPlus = document.createElement('button');
           btnPlus.className = 'btn btn-outline-primary w-100';
           btnPlus.type = 'button';
-          btnPlus.textContent = ' + 加 + ';
-          btnPlus.onclick = () => addOrderCount(key, tbId);
+          btnPlus.textContent = ' + 加 1 + ';
+          btnPlus.onclick = () => addOrder(key, 1);
           div2.appendChild(btnPlus);
 
           const div3 = document.createElement('div');
@@ -190,13 +202,24 @@
           const tbCount = document.createElement('input');
           tbCount.type = 'text';
           tbCount.classList.add('text-center', 'w-100', 'form-control');
-          tbCount.value = 1;
+          tbCount.value = _order[key].count;
           tbCount.setAttribute('id', tbId);
           tbCount.addEventListener('click', function () { this.select(); });
           tbCount.addEventListener('focus', function () { this.select(); });
           tbCount.addEventListener('input', function () {
             // remove non-digits
             this.value = this.value.replace(/\D/g, '');
+            clearTimeout(_countInputTimer);
+            _countInputTimer = setTimeout(() => {
+              if (tbCount.value === '') {
+                _order[key].count = 0;
+              } else {
+                _order[key].count = parseInt(tbCount.value);
+              }
+              console.log(`  > User set key:${key}, purchase count:${parseInt(tbCount.value)}`);
+              updateLabel(lbId, key);
+              sumCalcChangeOrders();
+            }, 800);
           });
           div3.appendChild(tbCount);
 
@@ -205,8 +228,8 @@
           const btnMinus = document.createElement('button');
           btnMinus.className = 'btn btn-outline-info w-100';
           btnMinus.type = 'button';
-          btnMinus.textContent = ' - 減 - ';
-          btnMinus.onclick = () => removeOrderCount(key, tbId);
+          btnMinus.textContent = ' - 減 1 - ';
+          btnMinus.onclick = () => removeOrder(key, 1);
           div4.appendChild(btnMinus);
 
           innerRow.appendChild(div2);    // plus button
@@ -219,8 +242,42 @@
           _orderListNode.appendChild(row);
         }
       } catch (error) {
-        console.log(`  > func:showOrders, error:${error}`);
-        document.getElementById('error').value = '產生選單過程有錯(showOrders)';
+        updateErrLabel('showOrders', '產生選單過程有錯', error);
+      }
+    }
+
+    // Generate the label text for the order item.
+    // If label id exists, update the label text, else return the label string.
+    // It shows the item name, purchased count and total price.
+    function updateLabel(labelId, indexKey) {
+      console.log(Date.now() + ` func:updateLabel(labelId:${labelId}, indexKey:${indexKey})`);
+      let labelStr;
+      let node;
+      try {
+        labelStr = indexKey + ' (x' + _order[indexKey].count + ') : $ '
+          + (_order[indexKey].count * _order[indexKey].price);
+        // if not found, exist quietly
+        node = document.getElementById(labelId);
+        if (node) {
+          node.innerText = labelStr;
+        }
+      } catch (error) {
+        updateErrLabel('updateLabel', '更新購買項目錯誤', error);
+      }
+      return labelStr;
+    }
+
+    // Assume the item is already in the order list before calling.
+    // This function will update the purchased count of the item.
+    function updateOrderCount(key, count) {
+      console.log(Date.now() + ` func:updateOrderCount(key:${key}, count:${count})`);
+      try {
+        _order[key].count = count;
+        removeChildren(_orderListNode);
+        showOrders();
+        sumOrders();
+      } catch (error) {
+        updateErrLabel('addOrder', '點單有錯誤', error);
       }
     }
 
@@ -228,7 +285,7 @@
       console.log(Date.now() + ' func:sumCalcChangeOrders()');
       let total = 0;
       for (const key in _order) {
-        console.log('  > ' + key + ': order count: ' + _order[key].count + ' price - ' + _order[key].price);
+        console.log(`  > key:${key}, count: ${_order[key].count}, price: ${_order[key].price}`);
         total += _order[key].count * _order[key].price;
       }
       if (total == 0) {
@@ -242,17 +299,6 @@
       paidAmount(0);
     }
 
-    function addOrderCount(key, countTextboxId) {
-      console.log(Date.now() + ` func:addOrderCount(key:${key}, countTextboxId:${countTextboxId})`);
-      try {
-        let count = parseInt(document.getElementById(countTextboxId).value);
-        addOrder(key, count);
-      } catch (error) {
-        console.log(`  > func:addOrderCount, error:${error}`);
-        document.getElementById('error').value = '加點有錯誤(addOrderCount)';
-      }
-    }
-
     // At first time being called, it initializes and adds one instance,
     // with the count and price to the array.
     // In subsequent calls, it increments or decrements counter.
@@ -260,13 +306,12 @@
       console.log(Date.now() + ` func:addOrder(key:${key}, count:${count}, price:$${price})`);
       try {
         if (_order.hasOwnProperty(key)) {
-          console.log('  > Already has key: ' + key + '& count: ' + _order[key].count);
+          console.log(`  > Already has key: ${key} & count: ${_order[key].count}`);
           _order[key].count = _order[key].count + count;
         } else {
           if (price === undefined || price === null) {
-            console.log(`  > Price is invalid for new key: ${key}`);
-            document.getElementById('error').value =
-              `Price setting is missing value or invalid for new key: ${key}`;
+            // Price is invalid for new key
+            updateErrLabel('addOrder', `無售價設定或對新標識 ${key} 售價值不和法`, null);
             return;
           }
           _order[key] = {};
@@ -278,19 +323,7 @@
         showOrders();
         sumCalcChangeOrders();
       } catch (error) {
-        console.log(`  > func:addOrder, error:${error}`);
-        document.getElementById('error').value = '點單有錯誤(addOrder)';
-      }
-    }
-
-    function removeOrderCount(key, countTextboxId) {
-      console.log(Date.now() + ` func:removeOrderCount(key:${key}, countTextboxId:${countTextboxId})`);
-      try {
-        let count = parseInt(document.getElementById(countTextboxId).value);
-        removeOrder(key, count);
-      } catch (error) {
-        console.log(`  > func:removeOrderCount, error:${error}`);
-        document.getElementById('error').value = '刪點有錯誤(removeOrderCount)';
+        updateErrLabel('addOrder', '點單有錯誤', error);
       }
     }
 
@@ -298,10 +331,10 @@
       console.log(Date.now() + ` func:removeOrder(key:${key}, count:${count})`);
       try {
         if (_order.hasOwnProperty(key)) {
-          if (_order[key].count >= 1) {
+          if (_order[key].count >= 0) {
             _order[key].count = _order[key].count - count;
           }
-          if (_order[key].count <= 0) {
+          if (_order[key].count < 0) {
             delete _order[key];
           }
           removeChildren(_orderListNode);
@@ -309,11 +342,10 @@
           sumCalcChangeOrders();
         }
       } catch (error) {
-        console.log(`  > func:removeOrder, error:${error}`);
-        document.getElementById('error').value = '刪單有錯誤(removeOrder)';
+        updateErrLabel('removeOrder', '刪單有錯誤', error);
       }
     }
   </script>
 </body>
 </html>
-<!-- calcChange-8v2 -->
+<!-- calcChange-9v1 -->
