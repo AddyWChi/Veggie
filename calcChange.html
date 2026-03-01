@@ -18,6 +18,7 @@
   </div>
   <div class="container-fluid">
     <div class="row my-2">
+      <button type="button" class="btn btn-outline-danger col-md col-sm" onclick="closeWindow()">關單</button>
       <button type="button" class="btn btn-info col-md col-sm" onclick="clearAmount()">再算一次</button>
       <button type="button" class="btn btn-outline-primary col-md col-sm" onclick="changeOrder()">改單</button>
     </div>
@@ -46,6 +47,7 @@
       <button class="btn btn-outline-secondary col-md col-sm" onclick="paidAmount(1000)"> 1000 </button>
     </div>
     <div class="row my-2">
+      <button type="button" class="btn btn-outline-danger col-md col-sm" onclick="closeWindow()">關單</button>
       <button type="button" class="btn btn-info col-md col-sm" onclick="clearAmount()">再算一次</button>
       <button type="button" class="btn btn-outline-primary col-md col-sm" onclick="changeOrder()">改單</button>
     </div>
@@ -97,6 +99,13 @@
     _customerIdboxNode.addEventListener('input', function () {
       document.title = _customerIdboxNode.value || '-找零';
     });
+
+    function closeWindow() {
+      console.log(Date.now() + ' func:closeWindow()');
+      if (confirm("關單 按 Ok, 取消 按 Cancel")) {
+        window.close();
+      }
+    }
 
     function updateErrLabel(funcName, message, errException) {
       if (funcName === undefined || funcName === null || funcName === '') {
@@ -354,4 +363,4 @@
   </script>
 </body>
 </html>
-<!-- calcChange-9v2 -->
+<!-- calcChange-9v3 -->
